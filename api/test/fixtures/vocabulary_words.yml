@@ -1,0 +1,29 @@
+mitigate:
+  user: alex
+  word: mitigate
+  part_of_speech: verb
+  personal_definition: To make something less bad or less severe.
+  definition: To reduce the severity, harmfulness, or seriousness of something painful or damaging.
+  collocations: ["mitigate the effects", "mitigate risk"]
+  synonyms: ["alleviate", "diminish"]
+  status: mastered
+  confidence: high
+  uses_count: 5
+  correct_uses_count: 5
+  learned_on: 2026-10-02
+
+undermine:
+  user: alex
+  word: undermine
+  part_of_speech: verb
+  status: practicing
+  confidence: low
+  uses_count: 3
+  correct_uses_count: 1
+  learned_on: 2026-10-07
+
+sam_lucid:
+  user: sam
+  word: lucid
+  part_of_speech: adjective
+  learned_on: 2026-10-01

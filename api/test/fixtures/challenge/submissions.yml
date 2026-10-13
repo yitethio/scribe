@@ -1,0 +1,6 @@
+sam_week_42:
+  challenge: week_42
+  user: sam
+  passage: Screens influence how we read.
+  word_count: 5
+  rubric: [{ "word": "influence", "used": true }, { "word": "facilitate", "used": false }, { "word": "undermine", "used": false }, { "word": "mitigate", "used": false }]

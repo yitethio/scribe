@@ -1,0 +1,28 @@
+today:
+  user: alex
+  kind: writing
+  title: Notes on Syntactic Rhythm & Pacing
+  word_count: 400
+  duration_minutes: 35
+  occurred_at: <%= 1.hour.ago %>
+
+yesterday:
+  user: alex
+  kind: challenge
+  title: The Architecture of Modern Learning
+  word_count: 300
+  occurred_at: <%= 1.day.ago %>
+
+three_days_ago:
+  user: alex
+  kind: revision
+  title: Prepositions & Transition Polishing
+  word_count: 100
+  occurred_at: <%= 3.days.ago %>
+
+sam_today:
+  user: sam
+  kind: writing
+  title: Sam writes
+  word_count: 999
+  occurred_at: <%= 1.hour.ago %>

@@ -1,0 +1,20 @@
+alex_vocab:
+  user: alex
+  key: vocab
+  name: Vocabulary
+  score: 72
+  previous_score: 64
+
+alex_cohesion:
+  user: alex
+  key: cohesion
+  name: Cohesion
+  score: 61
+  previous_score: 47
+
+sam_vocab:
+  user: sam
+  key: vocab
+  name: Vocabulary
+  score: 50
+  previous_score: 50

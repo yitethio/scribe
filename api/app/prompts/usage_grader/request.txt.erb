@@ -1,0 +1,4 @@
+Word: <%= review.word.word %> (<%= review.word.part_of_speech %>)
+<%= "Meaning: #{review.word.definition}\n" if review.word.definition.present? %>
+The learner's sentence:
+<%= review.sentence %>

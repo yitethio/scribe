@@ -1,0 +1,15 @@
+week_42:
+  title: Weekly Writing Challenge
+  theme: How technology is changing the way people learn.
+  words: ["influence", "facilitate", "undermine", "mitigate"]
+  target_count: 3
+  starts_at: <%= 2.days.ago %>
+  due_at: <%= 5.days.from_now %>
+
+week_41:
+  title: Last Week's Challenge
+  theme: Cities at night.
+  words: ["lucid"]
+  target_count: 1
+  starts_at: <%= 9.days.ago %>
+  due_at: <%= 2.days.ago %>
