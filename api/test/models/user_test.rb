@@ -11,4 +11,12 @@ class UserTest < ActiveSupport::TestCase
     assert_not user.valid?
     assert user.errors[:password].any?
   end
+
+  test "destroying a user removes everything they own" do
+    users(:alex).update!(focused_skill: skills(:alex_cohesion))
+
+    assert_difference -> { Skill.count }, -2 do
+      users(:alex).destroy!
+    end
+  end
 end

@@ -166,7 +166,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_080400) do
   add_foreign_key "drafts", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "skills", "users"
-  add_foreign_key "users", "skills", column: "focused_skill_id"
+  add_foreign_key "users", "skills", column: "focused_skill_id", on_delete: :nullify
   add_foreign_key "vocabulary_word_reviews", "vocabulary_words"
   add_foreign_key "vocabulary_words", "users"
 end

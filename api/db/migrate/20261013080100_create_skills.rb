@@ -11,6 +11,6 @@ class CreateSkills < ActiveRecord::Migration[8.1]
     end
     add_index :skills, %i[ user_id key ], unique: true
 
-    add_reference :users, :focused_skill, foreign_key: { to_table: :skills }
+    add_reference :users, :focused_skill, foreign_key: { to_table: :skills, on_delete: :nullify }
   end
 end
