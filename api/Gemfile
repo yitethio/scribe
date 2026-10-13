@@ -38,3 +38,8 @@ group :development, :test do
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
 end
+
+group :test do
+  # Checks every test response against the OpenAPI spec in public/openapi.yaml
+  gem "json_schemer"
+end
