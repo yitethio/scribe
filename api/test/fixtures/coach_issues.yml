@@ -1,0 +1,18 @@
+influence_to:
+  draft: deliberate_practice
+  phrase: influence to
+  category: Word choice / Collocation
+  badge: Collocation
+  summary: We normally say "influence on" rather than "influence to".
+  sample_fix: Technology has a big influence on the way people communicate
+
+due_to:
+  draft: deliberate_practice
+  phrase: Due to the fact that
+  category: Clarity
+  badge: Wordiness
+
+sam_issue:
+  draft: sam_draft
+  phrase: something
+  category: Clarity

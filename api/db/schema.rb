@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_080300) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_080400) do
   create_table "book_session_pages", force: :cascade do |t|
     t.integer "book_session_id", null: false
     t.integer "number", null: false
@@ -48,6 +48,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_080300) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_book_sessions_on_user_id"
+  end
+
+  create_table "coach_issue_resolutions", force: :cascade do |t|
+    t.integer "coach_issue_id", null: false
+    t.text "revision"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["coach_issue_id"], name: "index_coach_issue_resolutions_on_coach_issue_id", unique: true
+  end
+
+  create_table "coach_issues", force: :cascade do |t|
+    t.integer "draft_id", null: false
+    t.string "phrase", null: false
+    t.string "category", null: false
+    t.string "category_color"
+    t.string "badge"
+    t.text "summary"
+    t.text "question"
+    t.text "hint"
+    t.text "explanation"
+    t.text "sample_fix"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["draft_id"], name: "index_coach_issues_on_draft_id"
+  end
+
+  create_table "drafts", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "title", null: false
+    t.text "body"
+    t.boolean "coach_enabled", default: true, null: false
+    t.string "coach_level", default: "guided", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_drafts_on_user_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -126,6 +161,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_080300) do
   add_foreign_key "book_session_words", "book_sessions"
   add_foreign_key "book_session_words", "vocabulary_words"
   add_foreign_key "book_sessions", "users"
+  add_foreign_key "coach_issue_resolutions", "coach_issues"
+  add_foreign_key "coach_issues", "drafts"
+  add_foreign_key "drafts", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "skills", "users"
   add_foreign_key "users", "skills", column: "focused_skill_id"

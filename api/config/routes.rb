@@ -18,6 +18,12 @@ Rails.application.routes.draw do
         resources :words, only: %i[ index create destroy ]
       end
     end
+
+    resources :drafts do
+      resources :coach_issues, shallow: true do
+        resource :resolution, only: %i[ create destroy ], module: :coach_issues
+      end
+    end
   end
 
   get "up" => "rails/health#show", as: :rails_health_check
