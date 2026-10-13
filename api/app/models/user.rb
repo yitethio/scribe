@@ -9,6 +9,7 @@ class User < ApplicationRecord
   has_many :drafts, dependent: :destroy
   has_many :coach_issues, through: :drafts
   has_many :challenge_submissions, class_name: "Challenge::Submission", dependent: :destroy
+  has_many :revision_attempts, class_name: "Revision::Attempt", dependent: :destroy
   belongs_to :focused_skill, class_name: "Skill", optional: true
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }

@@ -1,0 +1,5 @@
+alex_due_to:
+  revision: due_to
+  user: alex
+  text: Because the author did not revise, errors remained.
+  correct: true

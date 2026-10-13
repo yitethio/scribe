@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_080600) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_080700) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "subject_type"
@@ -127,6 +127,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_080600) do
     t.index ["user_id"], name: "index_drafts_on_user_id"
   end
 
+  create_table "revision_attempts", force: :cascade do |t|
+    t.integer "revision_id", null: false
+    t.integer "user_id", null: false
+    t.text "text", null: false
+    t.boolean "correct", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["revision_id"], name: "index_revision_attempts_on_revision_id"
+    t.index ["user_id", "revision_id", "correct"], name: "index_revision_attempts_on_user_id_and_revision_id_and_correct"
+    t.index ["user_id"], name: "index_revision_attempts_on_user_id"
+  end
+
+  create_table "revisions", force: :cascade do |t|
+    t.text "original", null: false
+    t.string "focus_segment", null: false
+    t.string "category", null: false
+    t.text "prompt", null: false
+    t.string "expected_keyword", null: false
+    t.text "hint"
+    t.text "explanation"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "token", null: false
@@ -209,6 +233,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_080600) do
   add_foreign_key "coach_issue_resolutions", "coach_issues"
   add_foreign_key "coach_issues", "drafts"
   add_foreign_key "drafts", "users"
+  add_foreign_key "revision_attempts", "revisions"
+  add_foreign_key "revision_attempts", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "skills", "users"
   add_foreign_key "users", "skills", column: "focused_skill_id", on_delete: :nullify

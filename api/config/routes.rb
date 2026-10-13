@@ -29,6 +29,10 @@ Rails.application.routes.draw do
       resource :submission, only: %i[ show create ], module: :challenges
     end
 
+    resources :revisions, only: %i[ index show ] do
+      resources :attempts, only: %i[ index create ], module: :revisions
+    end
+
     resources :activities, only: %i[ index create ]
   end
 
