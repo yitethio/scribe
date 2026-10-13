@@ -21,7 +21,7 @@ class CoachIssuesControllerTest < ActionDispatch::IntegrationTest
     post draft_coach_issues_path(@draft), params: { phrase: "Furthermore", category: "Cohesion" }, headers: auth_headers, as: :json
 
     assert_response :created
-    assert_equal coach_issue_url(json["id"], format: :json), response.location
+    assert_equal coach_issue_url(json["id"]), response.location
   end
 
   test "update" do

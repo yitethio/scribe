@@ -1,6 +1,8 @@
 class ApplicationController < ActionController::API
   include Authentication
 
+  before_action { request.format = :json }
+
   rescue_from ActiveRecord::RecordNotFound do
     render json: { error: "Not found." }, status: :not_found
   end

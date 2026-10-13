@@ -14,7 +14,7 @@ class BookSessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :created
     assert_equal 1, json["current_page"]
-    assert_equal book_session_url(json["id"], format: :json), response.location
+    assert_equal book_session_url(json["id"]), response.location
   end
 
   test "update" do

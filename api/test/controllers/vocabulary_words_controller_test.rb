@@ -23,7 +23,7 @@ class VocabularyWordsControllerTest < ActionDispatch::IntegrationTest
     assert_response :created
     assert_equal "precipice", json["word"]
     assert_equal %w[ cliff brink ], json["synonyms"]
-    assert_equal vocabulary_word_url(json["id"], format: :json), response.location
+    assert_equal vocabulary_word_url(json["id"]), response.location
   end
 
   test "create rejects a duplicate word" do
