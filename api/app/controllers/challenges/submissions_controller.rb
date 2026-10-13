@@ -8,7 +8,7 @@ class Challenges::SubmissionsController < ApplicationController
   def create
     if @challenge.open?
       @submission = @challenge.submissions.find_or_initialize_by(user: Current.user)
-      @submission.update!(passage: params.require(:passage))
+      @submission.submit params.require(:passage)
       render :show, status: :created
     else
       render json: { error: "This challenge is closed." }, status: :unprocessable_content

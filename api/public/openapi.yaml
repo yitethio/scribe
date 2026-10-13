@@ -906,9 +906,10 @@ paths:
       tags: [Challenges]
       summary: Submit a passage
       description: |
-        Scores the passage against the challenge words (a word counts when the passage contains it or a
-        form of it, such as "undermined") and logs a challenge activity. Submitting again replaces the
-        passage and rescores it. Only open challenges accept submissions.
+        Claude grades how the passage uses each challenge word and logs a challenge activity. If Claude is
+        unavailable, the passage is scored by matching words instead (a word counts when the passage
+        contains it or a form of it, such as "undermined") and `graded` is false. Submitting again replaces
+        the passage and grades it again. Only open challenges accept submissions.
       operationId: submitChallenge
       requestBody:
         required: true
@@ -1613,7 +1614,8 @@ components:
 
     Submission:
       type: object
-      required: [id, challenge_id, passage, word_count, rubric, used_words, passed, created_at, updated_at]
+      required: [id, challenge_id, passage, word_count, rubric, used_words, scored_words, passed, graded, created_at,
+        updated_at]
       properties:
         id: { type: integer }
         challenge_id: { type: integer }
@@ -1621,16 +1623,28 @@ components:
         word_count: { type: integer }
         rubric:
           type: array
+          description: |
+            One entry per challenge word. When Claude grades the passage, entries also say whether the word is
+            used correctly and naturally, with a note to the learner that never rewrites their sentences.
+            Without Claude, entries only say whether the word appears.
           items:
             type: object
             required: [word, used]
             properties:
               word: { type: string }
               used: { type: boolean }
+              correct: { type: boolean }
+              natural: { type: string, enum: [natural, awkward, unnatural] }
+              note: { type: [string, "null"] }
         used_words:
           type: array
           items: { type: string }
-        passed: { type: boolean }
+        scored_words:
+          type: array
+          description: Words used correctly. Until Claude grades the passage, every used word counts.
+          items: { type: string }
+        passed: { type: boolean, description: "`scored_words` reaches the challenge's `target_count`." }
+        graded: { type: boolean, description: Whether Claude graded the passage. }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
 

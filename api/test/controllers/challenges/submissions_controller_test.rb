@@ -7,7 +7,20 @@ class Challenges::SubmissionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :created
     assert json["passed"]
+    assert_not json["graded"]
     assert_equal %w[ influence facilitate mitigate ], json["used_words"]
+  end
+
+  test "create with Claude grading the passage" do
+    answer ChallengeGrader, with: { words: %w[ influence facilitate undermine mitigate ].map { |word|
+      { word: word, used: true, correct: true, natural: "natural", note: "Well used." } } }
+
+    post challenge_submission_path(challenges(:week_42)), headers: auth_headers, as: :json,
+      params: { passage: "Screens influence us, facilitate skimming, undermine focus, and mitigate boredom." }
+
+    assert_response :created
+    assert json["graded"]
+    assert_equal [ "Well used." ] * 4, json["rubric"].pluck("note")
   end
 
   test "create again replaces the passage" do
