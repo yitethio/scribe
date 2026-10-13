@@ -19,4 +19,12 @@ class UserTest < ActiveSupport::TestCase
       users(:alex).destroy!
     end
   end
+
+  test "resetting the password signs out every session" do
+    user = users(:alex)
+    user.reset_password_to "brand new password"
+
+    assert user.authenticate("brand new password")
+    assert_empty user.sessions
+  end
 end

@@ -100,6 +100,66 @@ paths:
         "204": { description: Signed out. }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  /passwords:
+    post:
+      tags: [Auth]
+      summary: Request a password reset
+      description: |
+        Emails a reset link to the account with this address. The link points at
+        `FRONTEND_URL/reset-password?token=...` and expires after 15 minutes. Always returns `202`, so the
+        response doesn't reveal whether an account exists.
+      operationId: createPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email_address]
+              properties:
+                email_address: { type: string, format: email, example: demo@scribe.test }
+      responses:
+        "202": { description: "If the account exists, a reset email is on its way." }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /passwords/{token}:
+    patch:
+      tags: [Auth]
+      summary: Reset the password
+      description: |
+        Sets a new password with the token from the reset email. Signs out every session, so sign in again
+        afterwards. A token works once.
+      operationId: updatePassword
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: The token from the reset email.
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string, minLength: 8, example: correct horse }
+      responses:
+        "204": { description: Password changed. }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "422":
+          description: The token is invalid or expired (`error`), or the password is too short (`errors`).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - { $ref: "#/components/schemas/Error" }
+                  - { $ref: "#/components/schemas/ValidationErrors" }
+
   /profile:
     get:
       tags: [Profile]

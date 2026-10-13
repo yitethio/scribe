@@ -48,11 +48,13 @@ bin/rubocop
 |---|---|---|
 | `CORS_ORIGINS` | Comma-separated origins allowed to call the API from a browser | `http://localhost:5173` |
 | `SECRET_KEY_BASE` | Required in production | |
+| `FRONTEND_URL` | Password reset emails link to `FRONTEND_URL/reset-password?token=...` | `http://localhost:5173` |
+| `MAILER_FROM` | Sender of password reset emails | `Scribe <no-reply@scribe.test>` |
+| `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` | Mail server in production | port `587` |
 
 ## Not included yet
 
 - AI features. The coach issues, challenge rubric and definitions can be written through the API, but
   nothing generates them. Challenge scoring and revision grading are simple word matching.
-- Password reset (needs email delivery).
 - Admin endpoints. Challenges and revision exercises are shared by all users and are created with seeds
   or the Rails console.

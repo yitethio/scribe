@@ -18,4 +18,11 @@ class User < ApplicationRecord
   validates :email_address, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 8 }, allow_nil: true
   validates :weekly_goal, numericality: { greater_than: 0 }
+
+  def reset_password_to(password)
+    transaction do
+      update!(password: password)
+      sessions.destroy_all
+    end
+  end
 end

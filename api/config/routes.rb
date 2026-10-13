@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   resource :registration, only: :create
   resource :session, only: %i[ create destroy ]
+  resources :passwords, param: :token, only: %i[ create update ]
   resource :profile, only: %i[ show update ]
 
   resources :skills, only: %i[ index show update ] do
