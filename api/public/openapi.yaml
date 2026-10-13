@@ -1000,8 +1000,9 @@ paths:
       tags: [Revisions]
       summary: Submit a rewrite
       description: |
-        Graded on the server: correct when the rewrite contains the exercise's expected phrase
-        (case-insensitive). Logs a revision activity.
+        Claude judges whether the rewrite fixes the focus segment, accepting any fix that works, and
+        explains why without rewriting it. If Claude is unavailable, the rewrite is correct when it
+        contains the exercise's expected phrase (case-insensitive). Logs a revision activity.
       operationId: createAttempt
       requestBody:
         required: true
@@ -1702,7 +1703,9 @@ components:
         expected_keyword:
           type: string
           example: influence on
-          description: The phrase a correct revision should contain.
+          description: |
+            A phrase one correct revision contains. Claude treats it as a reference answer; without Claude, a
+            revision must contain it to be correct.
         hint: { type: [string, "null"] }
         explanation: { type: [string, "null"], description: Shown when an attempt is correct. }
 
@@ -1730,7 +1733,11 @@ components:
         revision_id: { type: integer }
         text: { type: string }
         correct: { type: boolean }
-        feedback: { type: [string, "null"], description: The explanation when correct, otherwise a hint. }
+        feedback:
+          type: [string, "null"]
+          description: |
+            Claude's note on the revision. Without Claude, the exercise's explanation when correct,
+            otherwise its hint.
         created_at: { type: string, format: date-time }
 
     ActivityKind:

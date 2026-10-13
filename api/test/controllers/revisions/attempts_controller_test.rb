@@ -21,6 +21,17 @@ class Revisions::AttemptsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Remember: 'influence' naturally takes 'on'.", json["feedback"]
   end
 
+  test "create with Claude judging the revision" do
+    answer RevisionGrader, with: { correct: true, feedback: "A verb avoids the collocation trap. Nice." }
+
+    post revision_attempts_path(revisions(:influence_to)), params: { text: "Technology shapes how people talk." },
+      headers: auth_headers, as: :json
+
+    assert_response :created
+    assert json["correct"]
+    assert_equal "A verb avoids the collocation trap. Nice.", json["feedback"]
+  end
+
   test "index lists only the current user's attempts" do
     get revision_attempts_path(revisions(:due_to)), headers: auth_headers(users(:sam))
 

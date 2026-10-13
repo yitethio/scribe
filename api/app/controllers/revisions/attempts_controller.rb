@@ -6,7 +6,9 @@ class Revisions::AttemptsController < ApplicationController
   end
 
   def create
-    @attempt = @revision.attempts.create!(user: Current.user, text: params.require(:text))
+    @attempt = @revision.attempts.new(user: Current.user, text: params.require(:text))
+    @attempt.grade
+    @attempt.save!
     render :show, status: :created
   end
 
