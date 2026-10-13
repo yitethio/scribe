@@ -35,6 +35,11 @@ body {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
+/* Override font-serif in Tailwind to use Newsreader for editorial feel */
+.font-serif {
+  font-family: 'Newsreader', Georgia, Cambria, 'Times New Roman', serif;
+}
+
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
@@ -51,8 +56,153 @@ body {
   background: rgba(140, 135, 125, 0.45);
 }
 
-/* Editorial selection color */
+/* Editorial text selection */
 ::selection {
   background: #EAE3D2;
   color: #1A1A1E;
+}
+
+/* ============================================
+   GRID UTILITIES 
+   ============================================ */
+.grid-cols-10 {
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+.grid-cols-15 {
+  grid-template-columns: repeat(15, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .sm\:grid-cols-15 {
+    grid-template-columns: repeat(15, minmax(0, 1fr));
+  }
+}
+
+/* ============================================
+   ANIMATION KEYFRAMES 
+   ============================================ */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInFromBottom {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInFromTop {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInFromRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes zoomIn95 {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ============================================
+   ANIMATE-IN UTILITIES 
+   ============================================ */
+.animate-in {
+  animation-fill-mode: both;
+}
+.fade-in { animation-name: fadeIn; }
+.slide-in-from-bottom-3 { animation-name: slideInFromBottom; }
+.slide-in-from-top-3 { animation-name: slideInFromTop; }
+.slide-in-from-right { animation-name: slideInFromRight; }
+.zoom-in-95 { animation-name: zoomIn95; }
+.duration-100 { animation-duration: 100ms; }
+.duration-150 { animation-duration: 150ms; }
+.duration-200 { animation-duration: 200ms; }
+.duration-300 { animation-duration: 300ms; }
+
+/* ============================================
+   TRANSITION UTILITIES 
+   ============================================ */
+/* Smooth transitions for interactive elements */
+a, button {
+  transition-property: color, background-color, border-color, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* ============================================
+   FOCUS UTILITIES
+   ============================================ */
+:focus-visible {
+  outline: 2px solid #1F2E3D;
+  outline-offset: 2px;
+}
+textarea:focus-visible,
+input:focus-visible {
+  outline: none;
+}
+
+/* Inherit font for form elements */
+textarea, input, button {
+  font-family: inherit;
+}
+
+/* ============================================
+   SHADOW UTILITIES 
+   ============================================ */
+.shadow-2xs {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+.shadow-xs {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* ============================================
+   LAYOUT UTILITIES 
+   ============================================ */
+.outline-hidden {
+  outline: none;
+}
+
+.rounded-xs {
+  border-radius: 0.125rem;
+}
+
+/* ============================================
+   BACKDROP BLUR UTILITIES 
+   ============================================ */
+.backdrop-blur-xs {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.backdrop-blur-2xs {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* ============================================
+   LINE CLAMP UTILITIES 
+   ============================================ */
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* ============================================
+   TYPOGRAPHY UTILITIES
+   ============================================ */
+/* Smooth number/counter transitions */
+.font-mono {
+  font-family: 'Fira Code', 'JetBrains Mono', 'Cascadia Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
