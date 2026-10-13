@@ -5,9 +5,12 @@ class ApplicationAgent < RubyLLM::Agent
   class Unavailable < StandardError; end
 
   model ENV.fetch("SCRIBE_AI_MODEL", "claude-opus-5-5"), provider: :anthropic
+  max_output_tokens 16_000
 
   def self.answer(**inputs)
     new(**inputs).answer
+  rescue RubyLLM::Error, RubyLLM::ConfigurationError, Faraday::Error, JSON::ParserError => error
+    raise Unavailable, error.message
   end
 
   def initialize(**inputs)
@@ -21,7 +24,5 @@ class ApplicationAgent < RubyLLM::Agent
 
   def answer
     ask(request).parsed or raise Unavailable, "#{self.class.name} returned no answer"
-  rescue RubyLLM::Error, RubyLLM::ConfigurationError, Faraday::Error, JSON::ParserError => error
-    raise Unavailable, error.message
   end
 end
