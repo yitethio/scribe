@@ -2,6 +2,8 @@
 
 Rails 8 JSON API for the scribe writing coach: accounts, vocabulary with spaced practice, book sessions,
 drafts with coach issues, weekly challenges, the revision lab, and the activity log behind the dashboard stats.
+Claude coaches drafts and grades the learner's writing, password resets go out by email, and admins manage
+the shared challenges and revision exercises.
 
 Written in vanilla Rails, 37signals style: REST resources only, logic in models and concerns, state as
 records (a resolved coach issue has a `resolution`), SQLite, Minitest with fixtures.
@@ -17,7 +19,8 @@ bin/rails db:prepare db:seed   # loads the frontend's sample data
 bin/rails server               # http://localhost:3000
 ```
 
-Sign in as `demo@scribe.test` / `password123`, or sign up with `POST /registration`.
+Sign in as `demo@scribe.test` / `password123`, or sign up with `POST /registration`. In development,
+password reset emails aren't sent; the reset link shows up in `log/development.log`.
 
 The demo account is an admin, so it can manage the shared challenges and revision exercises under
 `/admin/challenges` and `/admin/revisions`. Make someone else an admin from the console:
@@ -33,6 +36,27 @@ curl -X POST localhost:3000/session -H 'Content-Type: application/json' \
 
 curl localhost:3000/profile -H 'Authorization: Bearer <token>'
 ```
+
+## AI
+
+Claude reads the learner's work through [RubyLLM](https://rubyllm.com) agents in `app/agents`, with their
+prompts in `app/prompts`:
+
+| Feature | Endpoint | Agent |
+|---|---|---|
+| Check a learner's own definition of a word | `POST /vocabulary_words/{id}/definition_check` | `DefinitionChecker` |
+| Coach a draft at its coaching level | `POST /drafts/{id}/coaching` | `WritingCoach` |
+| Grade a challenge passage word by word | `POST /challenges/{id}/submission` | `ChallengeGrader` |
+| Judge a revision lab rewrite | `POST /revisions/{id}/attempts` | `RevisionGrader` |
+| Judge a vocabulary usage sentence | `POST /vocabulary_words/{id}/reviews` | `UsageGrader` |
+
+The rule from the frontend holds on the server: the AI never writes the learner's sentences. Every prompt
+starts from `app/prompts/shared/_ground_rules.txt.erb`, and `LearnerText` drops any field of an answer that
+reproduces one of the learner's sentences with edits before it's saved.
+
+Without `ANTHROPIC_API_KEY`, or when Claude is down, coaching and definition checks return `503`, and the
+three graders fall back to the old word matching. Tests never call Claude: an agent raises
+`ApplicationAgent::Unavailable` unless the test gives it an answer with `answer WritingCoach, with: {...}`.
 
 ## Docs
 
@@ -55,11 +79,8 @@ bin/rubocop
 |---|---|---|
 | `CORS_ORIGINS` | Comma-separated origins allowed to call the API from a browser | `http://localhost:5173` |
 | `SECRET_KEY_BASE` | Required in production | |
+| `ANTHROPIC_API_KEY` | Turns on the AI features | |
+| `SCRIBE_AI_MODEL` | Claude model the agents use | `claude-opus-5-5` |
 | `FRONTEND_URL` | Password reset emails link to `FRONTEND_URL/reset-password?token=...` | `http://localhost:5173` |
 | `MAILER_FROM` | Sender of password reset emails | `Scribe <no-reply@scribe.test>` |
 | `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` | Mail server in production | port `587` |
-
-## Not included yet
-
-- AI features. The coach issues, challenge rubric and definitions can be written through the API, but
-  nothing generates them. Challenge scoring and revision grading are simple word matching.

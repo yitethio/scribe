@@ -17,6 +17,10 @@ info:
     - Everything is scoped to the signed-in user. Another user's records return `404`.
     - Timestamps are ISO 8601 in UTC. Dates are `YYYY-MM-DD`.
 
+    **AI.** Claude checks definitions, coaches drafts and grades challenge passages, revisions and usage
+    sentences. It never rewrites the learner's sentences. Endpoints that only exist for the AI return `503`
+    when Claude is unavailable; the graders fall back to word matching instead.
+
     **Sample data.** `bin/rails db:seed` loads the frontend's sample data under `demo@scribe.test` /
     `password123`.
 servers:
