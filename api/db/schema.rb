@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_080100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_080200) do
   create_table "sessions", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "token", null: false
@@ -51,7 +51,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_080100) do
     t.index ["focused_skill_id"], name: "index_users_on_focused_skill_id"
   end
 
+  create_table "vocabulary_word_reviews", force: :cascade do |t|
+    t.integer "vocabulary_word_id", null: false
+    t.string "kind", null: false
+    t.text "sentence"
+    t.boolean "correct", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["vocabulary_word_id"], name: "index_vocabulary_word_reviews_on_vocabulary_word_id"
+  end
+
+  create_table "vocabulary_words", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "word", null: false
+    t.string "part_of_speech", default: "noun", null: false
+    t.text "personal_definition"
+    t.text "definition"
+    t.text "example"
+    t.text "context_sentence"
+    t.json "collocations", default: [], null: false
+    t.json "synonyms", default: [], null: false
+    t.string "status", default: "learning", null: false
+    t.string "confidence", default: "medium", null: false
+    t.integer "uses_count", default: 0, null: false
+    t.integer "correct_uses_count", default: 0, null: false
+    t.date "learned_on", null: false
+    t.datetime "last_reviewed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "word"], name: "index_vocabulary_words_on_user_id_and_word", unique: true
+    t.index ["user_id"], name: "index_vocabulary_words_on_user_id"
+  end
+
   add_foreign_key "sessions", "users"
   add_foreign_key "skills", "users"
   add_foreign_key "users", "skills", column: "focused_skill_id"
+  add_foreign_key "vocabulary_word_reviews", "vocabulary_words"
+  add_foreign_key "vocabulary_words", "users"
 end
