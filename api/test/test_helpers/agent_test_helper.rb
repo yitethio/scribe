@@ -23,4 +23,7 @@ end
 
 ApplicationAgent.singleton_class.prepend AgentTestHelper::StubbedAnswers
 
+# Agents can be built and inspected in tests without a real key.
+RubyLLM.config.anthropic_api_key = "test-key"
+
 ActiveSupport.on_load(:active_support_test_case) { include AgentTestHelper }

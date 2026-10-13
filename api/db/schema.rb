@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_090100) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "subject_type"
@@ -220,6 +220,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_090000) do
     t.datetime "last_reviewed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "definition_verdict"
+    t.text "definition_feedback"
+    t.datetime "definition_checked_at"
     t.index ["user_id", "word"], name: "index_vocabulary_words_on_user_id_and_word", unique: true
     t.index ["user_id"], name: "index_vocabulary_words_on_user_id"
   end

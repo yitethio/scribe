@@ -9,7 +9,10 @@ Rails.application.routes.draw do
   end
 
   resources :vocabulary_words do
-    resources :reviews, only: %i[ index create ], module: :vocabulary_words
+    scope module: :vocabulary_words do
+      resources :reviews, only: %i[ index create ]
+      resource :definition_check, only: :create
+    end
   end
 
   resources :book_sessions do

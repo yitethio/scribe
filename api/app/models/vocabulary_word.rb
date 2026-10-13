@@ -1,5 +1,8 @@
 class VocabularyWord < ApplicationRecord
   PARTS_OF_SPEECH = %w[ noun verb adjective adverb phrase other ]
+  DEFINITION_VERDICTS = %w[ accurate partial inaccurate ]
+
+  include DefinitionCheck
 
   belongs_to :user
   has_many :reviews, class_name: "VocabularyWord::Review", dependent: :destroy

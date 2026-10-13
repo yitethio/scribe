@@ -397,6 +397,29 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/ValidationFailed" }
 
+  /vocabulary_words/{vocabulary_word_id}/definition_check:
+    parameters:
+      - $ref: "#/components/parameters/VocabularyWordId"
+    post:
+      tags: [Vocabulary]
+      summary: Check the learner's definition
+      description: |
+        Claude compares the learner's `personal_definition` with the word's meaning and sets
+        `definition_verdict` and `definition_feedback`. The feedback points at what the definition got right
+        and what it missed, without rewriting it. The first check also fills in `part_of_speech`,
+        `definition`, `example`, `collocations` and `synonyms`; later checks leave those as they are.
+      operationId: checkDefinition
+      responses:
+        "201":
+          description: Checked. The updated word.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VocabularyWord" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "503": { $ref: "#/components/responses/CoachUnavailable" }
+
   /book_sessions:
     get:
       tags: [Book sessions]
@@ -1249,6 +1272,11 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
+    CoachUnavailable:
+      description: Claude couldn't answer (no API key, an outage, or a rate limit). Try again later.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
     Forbidden:
       description: Only admins can do that.
       content:
@@ -1382,7 +1410,7 @@ components:
       type: object
       required: [id, word, part_of_speech, personal_definition, definition, example, context_sentence, collocations,
         synonyms, status, confidence, uses_count, correct_uses_count, retention_rate, learned_on, last_reviewed_at,
-        created_at, updated_at]
+        definition_verdict, definition_feedback, definition_checked_at, created_at, updated_at]
       properties:
         id: { type: integer }
         word: { type: string, example: mitigate }
@@ -1404,6 +1432,12 @@ components:
         retention_rate: { type: [integer, "null"], description: Percent of correct uses. Null before any use. }
         learned_on: { type: string, format: date }
         last_reviewed_at: { type: [string, "null"], format: date-time }
+        definition_verdict:
+          type: [string, "null"]
+          enum: [accurate, partial, inaccurate, null]
+          description: How close `personal_definition` came, from the last definition check.
+        definition_feedback: { type: [string, "null"], description: Claude's note on the learner's definition. }
+        definition_checked_at: { type: [string, "null"], format: date-time }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
 
