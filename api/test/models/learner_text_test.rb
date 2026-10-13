@@ -10,7 +10,7 @@ class LearnerTextTest < ActiveSupport::TestCase
   end
 
   test "a partial rewrite is still a rewrite" do
-    assert @text.rewritten_in?("Technology has an influence on how people communicate.")
+    assert @text.rewritten_in?("Technology has a big influence on how people talk.")
   end
 
   test "quoting the learner's exact words is not a rewrite" do
@@ -21,7 +21,17 @@ class LearnerTextTest < ActiveSupport::TestCase
     assert_not @text.rewritten_in?("Her teacher had a lasting influence on her career.")
   end
 
-  test "short sentences are ignored" do
+  test "a paraphrase that reuses most of the learner's words is a rewrite" do
+    assert LearnerText.new("To make something weaker.").rewritten_in?("Better: to make something gradually weaker.")
+  end
+
+  test "feedback that echoes a few of the learner's words is not a rewrite" do
+    text = LearnerText.new("To make something less bad or less severe.")
+
+    assert_not text.rewritten_in?("Spot on: you caught the idea of making something less severe.")
+  end
+
+  test "very short sentences are ignored" do
     assert_not @text.rewritten_in?("I like it a lot.")
   end
 end
