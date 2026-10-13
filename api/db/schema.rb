@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_080500) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_080600) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "subject_type"
@@ -66,6 +66,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_080500) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_book_sessions_on_user_id"
+  end
+
+  create_table "challenge_submissions", force: :cascade do |t|
+    t.integer "challenge_id", null: false
+    t.integer "user_id", null: false
+    t.text "passage", null: false
+    t.integer "word_count", default: 0, null: false
+    t.json "rubric", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["challenge_id", "user_id"], name: "index_challenge_submissions_on_challenge_id_and_user_id", unique: true
+    t.index ["challenge_id"], name: "index_challenge_submissions_on_challenge_id"
+    t.index ["user_id"], name: "index_challenge_submissions_on_user_id"
+  end
+
+  create_table "challenges", force: :cascade do |t|
+    t.string "title", null: false
+    t.text "theme", null: false
+    t.json "words", default: [], null: false
+    t.integer "target_count", null: false
+    t.datetime "starts_at", null: false
+    t.datetime "due_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "coach_issue_resolutions", force: :cascade do |t|
@@ -180,6 +204,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_080500) do
   add_foreign_key "book_session_words", "book_sessions"
   add_foreign_key "book_session_words", "vocabulary_words"
   add_foreign_key "book_sessions", "users"
+  add_foreign_key "challenge_submissions", "challenges"
+  add_foreign_key "challenge_submissions", "users"
   add_foreign_key "coach_issue_resolutions", "coach_issues"
   add_foreign_key "coach_issues", "drafts"
   add_foreign_key "drafts", "users"
