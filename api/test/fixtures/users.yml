@@ -9,3 +9,9 @@ sam:
   name: Sam Okafor
   email_address: sam@example.com
   password_digest: <%= password_digest %>
+
+kim:
+  name: Kim Tadesse
+  email_address: kim@example.com
+  password_digest: <%= password_digest %>
+  admin: true

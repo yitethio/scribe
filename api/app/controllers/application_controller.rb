@@ -1,5 +1,5 @@
 class ApplicationController < ActionController::API
-  include Authentication
+  include Authentication, Authorization
 
   before_action { request.format = :json }
 

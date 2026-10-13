@@ -2,14 +2,14 @@
 # db/seeds/sample_data.json) under a demo account. Safe to run more than once.
 #
 #   bin/rails db:seed
-#   Sign in with demo@scribe.test / password123
+#   Sign in with demo@scribe.test / password123 (an admin, so it can manage challenges and revisions)
 
 data = JSON.parse(Rails.root.join("db/seeds/sample_data.json").read)
 
 ActiveRecord::Base.transaction do
   profile = data["user"]
   user = User.find_or_initialize_by(email_address: "demo@scribe.test")
-  user.update!(name: profile["name"], password: "password123", role_title: profile["role"], level: profile["currentLevel"],
+  user.update!(name: profile["name"], password: "password123", admin: true, role_title: profile["role"], level: profile["currentLevel"],
     weekly_goal: profile["weeklyGoal"], focus_title: profile.dig("currentFocus", "title"),
     focus_description: profile.dig("currentFocus", "description"),
     focus_recommendation: profile.dig("currentFocus", "recommendation"))

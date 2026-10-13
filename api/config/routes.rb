@@ -35,5 +35,9 @@ Rails.application.routes.draw do
 
   resources :activities, only: %i[ index create ]
 
+  namespace :admin do
+    resources :challenges, :revisions
+  end
+
   get "up" => "rails/health#show", as: :rails_health_check
 end

@@ -19,6 +19,13 @@ bin/rails server               # http://localhost:3000
 
 Sign in as `demo@scribe.test` / `password123`, or sign up with `POST /registration`.
 
+The demo account is an admin, so it can manage the shared challenges and revision exercises under
+`/admin/challenges` and `/admin/revisions`. Make someone else an admin from the console:
+
+```sh
+bin/rails runner 'User.find_by!(email_address: "kim@example.com").update!(admin: true)'
+```
+
 ```sh
 curl -X POST localhost:3000/session -H 'Content-Type: application/json' \
   -d '{"email_address":"demo@scribe.test","password":"password123"}'
@@ -56,5 +63,3 @@ bin/rubocop
 
 - AI features. The coach issues, challenge rubric and definitions can be written through the API, but
   nothing generates them. Challenge scoring and revision grading are simple word matching.
-- Admin endpoints. Challenges and revision exercises are shared by all users and are created with seeds
-  or the Rails console.

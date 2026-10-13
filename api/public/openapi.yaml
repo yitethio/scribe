@@ -35,6 +35,8 @@ tags:
   - name: Challenges
   - name: Revisions
   - name: Activity
+  - name: Admin
+    description: Shared content for everyone. Requires a user with `admin` set.
 
 paths:
   /registration:
@@ -799,7 +801,7 @@ paths:
     get:
       tags: [Challenges]
       summary: List challenges
-      description: Newest first. Challenges are shared by all users and created by seeds or the console.
+      description: Newest first. Challenges are shared by all users and managed under `/admin/challenges`.
       operationId: listChallenges
       parameters:
         - name: current
@@ -1020,6 +1022,168 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "422": { $ref: "#/components/responses/ValidationFailed" }
 
+  /admin/challenges:
+    get:
+      tags: [Admin]
+      summary: List challenges
+      description: Newest first. Deleting a challenge deletes its submissions.
+      operationId: listAdminChallenges
+      responses:
+        "200":
+          description: The challenges.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AdminChallenge" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [Admin]
+      summary: Create a challenge
+      operationId: createAdminChallenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/ChallengeInput"
+                - required: [title, theme, words, target_count, starts_at, due_at]
+      responses:
+        "201":
+          description: Created.
+          headers:
+            Location: { $ref: "#/components/headers/Location" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminChallenge" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /admin/challenges/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Admin]
+      summary: Show a challenge
+      operationId: showAdminChallenge
+      responses:
+        "200":
+          description: The challenge.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminChallenge" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Admin]
+      summary: Update a challenge
+      operationId: updateAdminChallenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChallengeInput" }
+      responses:
+        "204": { description: Updated. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      tags: [Admin]
+      summary: Delete a challenge
+      operationId: destroyAdminChallenge
+      responses:
+        "204": { description: Deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /admin/revisions:
+    get:
+      tags: [Admin]
+      summary: List revision exercises
+      description: Every exercise in the revision lab, with the expected answer. Deleting one deletes its attempts.
+      operationId: listAdminRevisions
+      responses:
+        "200":
+          description: The revision exercises.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AdminRevision" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [Admin]
+      summary: Create a revision exercise
+      operationId: createAdminRevision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/RevisionInput"
+                - required: [original, focus_segment, category, prompt, expected_keyword]
+      responses:
+        "201":
+          description: Created.
+          headers:
+            Location: { $ref: "#/components/headers/Location" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminRevision" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /admin/revisions/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Admin]
+      summary: Show a revision exercise
+      operationId: showAdminRevision
+      responses:
+        "200":
+          description: The revision exercise.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminRevision" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Admin]
+      summary: Update a revision exercise
+      operationId: updateAdminRevision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RevisionInput" }
+      responses:
+        "204": { description: Updated. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      tags: [Admin]
+      summary: Delete a revision exercise
+      operationId: destroyAdminRevision
+      responses:
+        "204": { description: Deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1085,6 +1249,11 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: Only admins can do that.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
 
   schemas:
     Error:
@@ -1107,11 +1276,12 @@ components:
 
     User:
       type: object
-      required: [id, name, email_address]
+      required: [id, name, email_address, admin]
       properties:
         id: { type: integer }
         name: { type: string }
         email_address: { type: string, format: email }
+        admin: { type: boolean, description: Admins can manage challenges and revision exercises under `/admin`. }
 
     SessionToken:
       type: object
@@ -1415,6 +1585,67 @@ components:
         prompt: { type: string }
         hint: { type: [string, "null"] }
         mastered: { type: boolean }
+
+    ChallengeInput:
+      type: object
+      properties:
+        title: { type: string, example: Weekly Writing Challenge }
+        theme: { type: string, example: How technology is changing the way people learn. }
+        words:
+          type: array
+          items: { type: string }
+          example: [influence, facilitate, undermine, mitigate]
+        target_count: { type: integer, minimum: 1, example: 3 }
+        starts_at: { type: string, format: date-time }
+        due_at: { type: string, format: date-time }
+
+    AdminChallenge:
+      type: object
+      required: [id, title, theme, words, target_count, starts_at, due_at, open, submissions_count, created_at, updated_at]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        theme: { type: string }
+        words:
+          type: array
+          items: { type: string }
+        target_count: { type: integer }
+        starts_at: { type: string, format: date-time }
+        due_at: { type: string, format: date-time }
+        open: { type: boolean }
+        submissions_count: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    RevisionInput:
+      type: object
+      properties:
+        original: { type: string, example: Technology has a big influence to the way people communicate. }
+        focus_segment: { type: string, example: influence to }
+        category: { type: string, example: Collocation / Preposition }
+        prompt: { type: string, example: Can you rewrite this sentence to fix the preposition? }
+        expected_keyword:
+          type: string
+          example: influence on
+          description: The phrase a correct revision should contain.
+        hint: { type: [string, "null"] }
+        explanation: { type: [string, "null"], description: Shown when an attempt is correct. }
+
+    AdminRevision:
+      type: object
+      required: [id, original, focus_segment, category, prompt, expected_keyword, hint, explanation, attempts_count, created_at, updated_at]
+      properties:
+        id: { type: integer }
+        original: { type: string }
+        focus_segment: { type: string }
+        category: { type: string }
+        prompt: { type: string }
+        expected_keyword: { type: string }
+        hint: { type: [string, "null"] }
+        explanation: { type: [string, "null"] }
+        attempts_count: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
 
     Attempt:
       type: object

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_080700) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_090000) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "subject_type"
@@ -187,6 +187,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_080700) do
     t.text "focus_description"
     t.text "focus_recommendation"
     t.integer "focused_skill_id"
+    t.boolean "admin", default: false, null: false
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
     t.index ["focused_skill_id"], name: "index_users_on_focused_skill_id"
   end

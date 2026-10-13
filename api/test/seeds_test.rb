@@ -9,5 +9,6 @@ class SeedsTest < ActiveSupport::TestCase
     assert_equal %w[ precipice formidable bewildered peculiar ], user.book_sessions.sole.vocabulary_words.pluck(:word)
     assert_equal 3, user.drafts.sole.coach_issues.count
     assert_equal "cohesion", user.focused_skill.key
+    assert user.admin?
   end
 end
