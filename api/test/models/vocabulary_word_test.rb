@@ -29,4 +29,11 @@ class VocabularyWordTest < ActiveSupport::TestCase
     assert_equal 33, vocabulary_words(:undermine).retention_rate
     assert_nil vocabulary_words(:sam_lucid).retention_rate
   end
+
+  test "new is a status" do
+    word = users(:alex).vocabulary_words.create!(word: "lucid", status: "new")
+
+    assert word.new?
+    assert_not word.new_record?
+  end
 end

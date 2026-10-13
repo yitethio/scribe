@@ -5,7 +5,7 @@ class VocabularyWord < ApplicationRecord
   has_many :reviews, class_name: "VocabularyWord::Review", dependent: :destroy
   has_many :book_session_words, class_name: "BookSession::Word", dependent: :destroy
 
-  enum :status, %w[ learning practicing mastered ].index_by(&:itself), validate: true
+  enum :status, %w[ new learning practicing mastered ].index_by(&:itself), validate: true, scopes: false
   enum :confidence, %w[ low medium high ].index_by(&:itself), validate: true
 
   normalizes :word, with: ->(word) { word.strip.downcase }
