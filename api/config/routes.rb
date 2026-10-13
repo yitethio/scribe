@@ -24,6 +24,8 @@ Rails.application.routes.draw do
         resource :resolution, only: %i[ create destroy ], module: :coach_issues
       end
     end
+
+    resources :activities, only: %i[ index create ]
   end
 
   get "up" => "rails/health#show", as: :rails_health_check

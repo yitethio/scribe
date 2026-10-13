@@ -10,7 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_080400) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_080500) do
+  create_table "activities", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "subject_type"
+    t.integer "subject_id"
+    t.string "kind", null: false
+    t.string "title", null: false
+    t.string "status"
+    t.integer "word_count", default: 0, null: false
+    t.integer "vocabulary_added", default: 0, null: false
+    t.integer "duration_minutes", default: 0, null: false
+    t.datetime "occurred_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["subject_type", "subject_id"], name: "index_activities_on_subject"
+    t.index ["user_id", "occurred_at"], name: "index_activities_on_user_id_and_occurred_at"
+    t.index ["user_id"], name: "index_activities_on_user_id"
+  end
+
   create_table "book_session_pages", force: :cascade do |t|
     t.integer "book_session_id", null: false
     t.integer "number", null: false
@@ -157,6 +175,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_080400) do
     t.index ["user_id"], name: "index_vocabulary_words_on_user_id"
   end
 
+  add_foreign_key "activities", "users"
   add_foreign_key "book_session_pages", "book_sessions"
   add_foreign_key "book_session_words", "book_sessions"
   add_foreign_key "book_session_words", "vocabulary_words"
