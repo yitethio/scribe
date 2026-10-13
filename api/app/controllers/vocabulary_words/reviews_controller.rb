@@ -6,7 +6,9 @@ class VocabularyWords::ReviewsController < ApplicationController
   end
 
   def create
-    @review = @vocabulary_word.reviews.create!(params.permit(:kind, :sentence, :correct))
+    @review = @vocabulary_word.reviews.new(params.permit(:kind, :sentence, :correct))
+    @review.grade
+    @review.save!
     render :show, status: :created
   end
 

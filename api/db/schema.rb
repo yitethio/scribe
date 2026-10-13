@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_090200) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_090300) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "subject_type"
@@ -200,6 +200,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_090200) do
     t.boolean "correct", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "feedback"
     t.index ["vocabulary_word_id"], name: "index_vocabulary_word_reviews_on_vocabulary_word_id"
   end
 

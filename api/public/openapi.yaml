@@ -361,8 +361,9 @@ paths:
       description: |
         Records one spaced-practice drill and updates the word's counters.
 
-        - `usage` drills send the user's `sentence`. The API marks it correct when the sentence contains
-          the word, and a correct sentence becomes the word's `context_sentence`.
+        - `usage` drills send the user's `sentence`. Claude judges whether it uses the word correctly and
+          explains why in `feedback`, without rewriting the sentence. If Claude is unavailable, the sentence
+          is correct when it contains the word. A correct sentence becomes the word's `context_sentence`.
         - Other kinds are graded by the client, so send `correct`.
       operationId: createReview
       requestBody:
@@ -1476,13 +1477,16 @@ components:
 
     Review:
       type: object
-      required: [id, vocabulary_word_id, kind, sentence, correct, created_at]
+      required: [id, vocabulary_word_id, kind, sentence, correct, feedback, created_at]
       properties:
         id: { type: integer }
         vocabulary_word_id: { type: integer }
         kind: { $ref: "#/components/schemas/ReviewKind" }
         sentence: { type: [string, "null"] }
         correct: { type: boolean }
+        feedback:
+          type: [string, "null"]
+          description: Claude's note on a `usage` sentence. Null for other kinds, or when Claude was unavailable.
         created_at: { type: string, format: date-time }
 
     BookSessionInput:

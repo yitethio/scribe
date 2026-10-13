@@ -10,6 +10,17 @@ class VocabularyWords::ReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, json.dig("vocabulary_word", "correct_uses_count")
   end
 
+  test "create with Claude judging a usage sentence" do
+    answer UsageGrader, with: { correct: true, feedback: "A natural fit: 'undermine' suits gradual, hidden damage." }
+
+    post vocabulary_word_reviews_path(vocabulary_words(:undermine)),
+      params: { kind: "usage", sentence: "Doubt can undermine a draft." }, headers: auth_headers, as: :json
+
+    assert_response :created
+    assert json["correct"]
+    assert_match "A natural fit", json["feedback"]
+  end
+
   test "create records a selection answer graded by the client" do
     post vocabulary_word_reviews_path(vocabulary_words(:undermine)),
       params: { kind: "selection", correct: false }, headers: auth_headers, as: :json
