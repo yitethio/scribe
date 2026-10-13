@@ -23,6 +23,7 @@ Rails.application.routes.draw do
   end
 
   resources :drafts do
+    resource :coaching, only: :create, module: :drafts
     resources :coach_issues, shallow: true do
       resource :resolution, only: %i[ create destroy ], module: :coach_issues
     end

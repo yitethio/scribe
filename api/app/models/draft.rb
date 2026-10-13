@@ -1,4 +1,10 @@
 class Draft < ApplicationRecord
+  COACH_CATEGORY_COLORS = { "Grammar" => "#DC2626", "Word choice" => "#D97706", "Clarity" => "#7C3AED",
+    "Cohesion" => "#2563EB", "Style" => "#059669" }
+  COACH_CATEGORIES = COACH_CATEGORY_COLORS.keys
+
+  include Coachable
+
   belongs_to :user
   has_many :coach_issues, dependent: :destroy
 

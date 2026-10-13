@@ -699,6 +699,33 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /drafts/{draft_id}/coaching:
+    parameters:
+      - $ref: "#/components/parameters/DraftId"
+    post:
+      tags: [Coach issues]
+      summary: Coach the draft
+      description: |
+        Claude reads the draft at its `coach_level` and replaces the open coach issues with what it finds.
+        Resolved issues stay. Every issue quotes the learner's exact words in `phrase`; the coach asks
+        questions and gives hints but never rewrites the learner's sentences, so `sample_fix` is a model
+        sentence on a different subject. Returns all of the draft's issues, oldest first.
+      operationId: coachDraft
+      responses:
+        "201":
+          description: Coached.
+          headers:
+            Location: { $ref: "#/components/headers/Location" }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CoachIssue" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "503": { $ref: "#/components/responses/CoachUnavailable" }
+
   /drafts/{draft_id}/coach_issues:
     parameters:
       - $ref: "#/components/parameters/DraftId"
