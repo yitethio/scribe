@@ -54,7 +54,10 @@ The rule from the frontend holds on the server: the AI never writes the learner'
 starts from `app/prompts/shared/_ground_rules.txt.erb`, and `LearnerText` drops any field of an answer that
 reproduces one of the learner's sentences with edits before it's saved.
 
-Without `ANTHROPIC_API_KEY`, or when Claude is down, coaching and definition checks return `503`, and the
+Claude is the default, but any RubyLLM provider with structured output works: set `SCRIBE_AI_PROVIDER`
+(and `SCRIBE_AI_MODEL` if needed) plus that provider's key, e.g. `SCRIBE_AI_PROVIDER=gemini GEMINI_API_KEY=...`.
+
+Without an API key, or when the provider is down, coaching and definition checks return `503`, and the
 three graders fall back to the old word matching. Tests never call Claude: an agent raises
 `ApplicationAgent::Unavailable` unless the test gives it an answer with `answer WritingCoach, with: {...}`.
 
@@ -79,8 +82,9 @@ bin/rubocop
 |---|---|---|
 | `CORS_ORIGINS` | Comma-separated origins allowed to call the API from a browser | `http://localhost:5173` |
 | `SECRET_KEY_BASE` | Required in production | |
-| `ANTHROPIC_API_KEY` | Turns on the AI features | |
-| `SCRIBE_AI_MODEL` | Claude model the agents use | `claude-opus-5-5` |
+| `SCRIBE_AI_PROVIDER` | Which RubyLLM provider the agents use: `anthropic`, `gemini`, `openai`, ... | `anthropic` |
+| `SCRIBE_AI_MODEL` | Model the agents use. Required for providers other than `anthropic` and `gemini` | `claude-opus-5-5`, or `gemini-pro-latest` with Gemini |
+| `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OPENAI_API_KEY` | The key for the chosen provider. Without one, the AI features are off | |
 | `FRONTEND_URL` | Password reset emails link to `FRONTEND_URL/reset-password?token=...` | `http://localhost:5173` |
 | `MAILER_FROM` | Sender of password reset emails | `Scribe <no-reply@scribe.test>` |
 | `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` | Mail server in production | port `587` |

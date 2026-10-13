@@ -1307,7 +1307,7 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
     CoachUnavailable:
-      description: Claude couldn't answer (no API key, an outage, or a rate limit). Try again later.
+      description: The AI provider couldn't answer (no API key, an outage, or a rate limit). Try again later.
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
