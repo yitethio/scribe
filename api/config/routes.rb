@@ -11,6 +11,13 @@ Rails.application.routes.draw do
     resources :vocabulary_words do
       resources :reviews, only: %i[ index create ], module: :vocabulary_words
     end
+
+    resources :book_sessions do
+      scope module: :book_sessions do
+        resources :pages, only: %i[ index show update ], param: :number
+        resources :words, only: %i[ index create destroy ]
+      end
+    end
   end
 
   get "up" => "rails/health#show", as: :rails_health_check

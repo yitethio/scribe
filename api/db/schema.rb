@@ -10,7 +10,46 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_080200) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_080300) do
+  create_table "book_session_pages", force: :cascade do |t|
+    t.integer "book_session_id", null: false
+    t.integer "number", null: false
+    t.string "chapter"
+    t.string "subhead"
+    t.json "paragraphs", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_session_id", "number"], name: "index_book_session_pages_on_book_session_id_and_number", unique: true
+    t.index ["book_session_id"], name: "index_book_session_pages_on_book_session_id"
+  end
+
+  create_table "book_session_words", force: :cascade do |t|
+    t.integer "book_session_id", null: false
+    t.integer "vocabulary_word_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_session_id", "vocabulary_word_id"], name: "idx_on_book_session_id_vocabulary_word_id_82143ce6d5", unique: true
+    t.index ["book_session_id"], name: "index_book_session_words_on_book_session_id"
+    t.index ["vocabulary_word_id"], name: "index_book_session_words_on_vocabulary_word_id"
+  end
+
+  create_table "book_sessions", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "book_title", null: false
+    t.string "author"
+    t.string "cover_url"
+    t.string "filename"
+    t.integer "current_page", default: 1, null: false
+    t.integer "total_pages"
+    t.integer "zoom_level", default: 100, null: false
+    t.integer "words_rewritten", default: 0, null: false
+    t.integer "duration_seconds", default: 0, null: false
+    t.text "draft_text"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_book_sessions_on_user_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "token", null: false
@@ -83,6 +122,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_080200) do
     t.index ["user_id"], name: "index_vocabulary_words_on_user_id"
   end
 
+  add_foreign_key "book_session_pages", "book_sessions"
+  add_foreign_key "book_session_words", "book_sessions"
+  add_foreign_key "book_session_words", "vocabulary_words"
+  add_foreign_key "book_sessions", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "skills", "users"
   add_foreign_key "users", "skills", column: "focused_skill_id"

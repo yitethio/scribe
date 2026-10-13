@@ -3,6 +3,7 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :skills, dependent: :destroy
   has_many :vocabulary_words, dependent: :destroy
+  has_many :book_sessions, dependent: :destroy
   belongs_to :focused_skill, class_name: "Skill", optional: true
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }

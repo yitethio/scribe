@@ -1,8 +1,9 @@
 class VocabularyWord < ApplicationRecord
   PARTS_OF_SPEECH = %w[ noun verb adjective adverb phrase other ]
 
-  belongs_to :user, default: -> { Current.user }
+  belongs_to :user
   has_many :reviews, class_name: "VocabularyWord::Review", dependent: :destroy
+  has_many :book_session_words, class_name: "BookSession::Word", dependent: :destroy
 
   enum :status, %w[ learning practicing mastered ].index_by(&:itself), validate: true
   enum :confidence, %w[ low medium high ].index_by(&:itself), validate: true
