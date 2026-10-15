@@ -25,7 +25,6 @@ export default function BookSession() {
   // PDF Viewer controls
   const [zoom, setZoom] = useState(100);
   const [pageInput, setPageInput] = useState(bookSession.currentPage);
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Vocabulary popup / popover state
   const [selectedWordChip, setSelectedWordChip] = useState(null);
@@ -80,7 +79,7 @@ export default function BookSession() {
   }, [isDragging]);
 
   // Handle Text Selection in My Writing area
-  const handleTextSelect = (e) => {
+  const handleTextSelect = () => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) {
       setSelectionPopover(null);
