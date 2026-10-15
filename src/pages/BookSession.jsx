@@ -12,6 +12,7 @@ import {
 } from "@phosphor-icons/react";
 import { useScribe } from "../store/scribeContext";
 import { AppLayout } from "../components/layout/AppLayout";
+import { Dialog } from "../components/ui/Dialog";
 
 export default function BookSession() {
   const { state, updateBookSession, addBookSessionWord, addVocabularyWord } = useScribe();
@@ -460,14 +461,8 @@ export default function BookSession() {
 
         {/* Word card, opened from a new-word tag */}
         {selectedWordChip && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-            <button className="fade absolute inset-0 bg-ink/40" aria-label="Close" onClick={() => setSelectedWordChip(null)} />
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="word-card-title"
-              className="pop relative bg-sheet w-full sm:max-w-lg rounded-t-[14px] sm:rounded-[12px] max-h-[92dvh] overflow-y-auto shadow-[0_24px_64px_-24px_rgb(22_24_28/0.5)]"
-            >
+          <Dialog onClose={() => setSelectedWordChip(null)} labelledBy="word-card-title">
+            <div className="overflow-y-auto">
               <div className="px-6 pt-6 flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-baseline gap-3">
@@ -544,7 +539,7 @@ export default function BookSession() {
                 </button>
               </div>
             </div>
-          </div>
+          </Dialog>
         )}
       </div>
     </AppLayout>
