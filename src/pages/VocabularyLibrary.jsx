@@ -1,24 +1,27 @@
 import React, { useState } from "react";
-import {
-  Library,
-  Search,
-  Filter,
-  Plus,
-  BookOpen,
-  CheckCircle2,
-  AlertCircle,
-  Sparkles,
-  Layers,
-  Table,
-  LayoutGrid,
-  ChevronRight,
-  TrendingUp,
-  Bookmark
-} from "lucide-react";
+import { MagnifyingGlass, Plus, Books, ArrowRight } from "@phosphor-icons/react";
 import { useScribe } from "../store/scribeContext";
-import { AppLayout } from "../components/layout/AppLayout";
+import { AppLayout, pageClass } from "../components/layout/AppLayout";
 import { VocabDetailDrawer } from "../components/vocabulary/VocabDetailDrawer";
 import { SpacedPracticeModal } from "../components/vocabulary/SpacedPracticeModal";
+
+const filters = [
+  { id: "all", label: "All" },
+  { id: "new", label: "New" },
+  { id: "learning", label: "Learning" },
+  { id: "practicing", label: "Practicing" },
+  { id: "mastered", label: "Mastered" },
+  { id: "frequently misused", label: "Often misused" }
+];
+
+const isMisused = (w) => w.timesUsed > 1 && w.timesUsedCorrectly / w.timesUsed < 0.6;
+
+const statusTag = (status) =>
+  status === "mastered" ? "tag-good" : status === "practicing" ? "tag-warn" : "tag-pen";
+
+const StatusTag = ({ status }) => (
+  <span className={`tag ${statusTag(status)} capitalize`}>{status}</span>
+);
 
 export default function VocabularyLibrary() {
   const { state } = useScribe();
@@ -26,28 +29,20 @@ export default function VocabularyLibrary() {
 
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'table'
-
-  // Modal / Drawer state
+  const [viewMode, setViewMode] = useState("entries");
   const [inspectingWord, setInspectingWord] = useState(null);
   const [practiceWord, setPracticeWord] = useState(null);
 
-  // Filter logic
+  const query = searchQuery.toLowerCase();
   const filteredWords = vocabulary.filter((item) => {
-    // Search query filter
     const matchesSearch =
-      item.word.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.personalDef?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.correctDef?.toLowerCase().includes(searchQuery.toLowerCase());
-
+      item.word.toLowerCase().includes(query) ||
+      item.personalDef?.toLowerCase().includes(query) ||
+      item.correctDef?.toLowerCase().includes(query);
     if (!matchesSearch) return false;
-
-    // Status filter
     if (activeFilter === "all") return true;
-    if (activeFilter === "frequently misused") {
-      return item.timesUsed > 1 && item.timesUsedCorrectly / item.timesUsed < 0.6;
-    }
-    return item.status.toLowerCase() === activeFilter.toLowerCase();
+    if (activeFilter === "frequently misused") return isMisused(item);
+    return item.status.toLowerCase() === activeFilter;
   });
 
   const filterCounts = {
@@ -56,221 +51,160 @@ export default function VocabularyLibrary() {
     learning: vocabulary.filter((w) => w.status === "learning").length,
     practicing: vocabulary.filter((w) => w.status === "practicing").length,
     mastered: vocabulary.filter((w) => w.status === "mastered").length,
-    "frequently misused": vocabulary.filter(
-      (w) => w.timesUsed > 1 && w.timesUsedCorrectly / w.timesUsed < 0.6
-    ).length
+    "frequently misused": vocabulary.filter(isMisused).length
   };
 
   return (
     <AppLayout
-      title="Vocabulary Library"
-      subtitle="Your deliberate repository of acquired words, personal definitions & retention tracking"
+      title="Vocabulary"
+      subtitle="Every word you have saved, in your own definition first and the dictionary's second."
     >
       {({ openCaptureModal }) => (
-        <div className="p-8 max-w-6xl mx-auto space-y-6 animate-in fade-in duration-150">
-          {/* Header Controls */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            {/* Search Bar */}
+        <div className={`${pageClass} space-y-6`}>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rise">
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A8D96]" />
+              <MagnifyingGlass size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
               <input
-                type="text"
+                type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search words, definitions, or collocations..."
-                className="w-full pl-10 pr-4 py-2 bg-white border border-[#DDD6C9] rounded-xl text-xs font-serif text-[#1A1A1E] placeholder:text-[#8C909B] focus:outline-hidden focus:border-[#1F2E3D]"
+                placeholder="Search words and definitions"
+                aria-label="Search vocabulary"
+                className="field pl-10 h-11"
               />
             </div>
-
-            {/* Right Controls: View Toggle & Add Word */}
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 bg-[#F5F2EB] p-1 rounded-lg border border-[#E5DFD4]">
+              <div className="seg" role="group" aria-label="View">
                 <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-1.5 rounded transition-colors cursor-pointer ${
-                    viewMode === "grid" ? "bg-white text-[#1A1A1E] shadow-2xs" : "text-[#7A7E8B]"
-                  }`}
-                  title="Card Grid View"
+                  onClick={() => setViewMode("entries")}
+                  aria-pressed={viewMode === "entries"}
+                  className="seg-item"
                 >
-                  <LayoutGrid className="w-3.5 h-3.5" />
+                  Entries
                 </button>
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`p-1.5 rounded transition-colors cursor-pointer ${
-                    viewMode === "table" ? "bg-white text-[#1A1A1E] shadow-2xs" : "text-[#7A7E8B]"
-                  }`}
-                  title="Table View"
+                  aria-pressed={viewMode === "table"}
+                  className="seg-item"
                 >
-                  <Table className="w-3.5 h-3.5" />
+                  Table
                 </button>
               </div>
-
-              <button
-                onClick={() => openCaptureModal()}
-                className="flex items-center gap-1.5 px-4 py-2 bg-[#1F2E3D] hover:bg-[#15202B] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>+ Capture Word</span>
+              <button onClick={() => openCaptureModal()} className="btn btn-primary">
+                <Plus size={15} weight="bold" />
+                <span>Save a word</span>
               </button>
             </div>
           </div>
 
-          {/* Filter Pills */}
-          <div className="flex flex-wrap gap-1.5 border-b border-[#E8E2D8] pb-4">
-            {[
-              { id: "all", label: "All Words" },
-              { id: "new", label: "New" },
-              { id: "learning", label: "Learning" },
-              { id: "practicing", label: "Practicing" },
-              { id: "mastered", label: "Mastered" },
-              { id: "frequently misused", label: "Frequently Misused" }
-            ].map((f) => {
-              const count = filterCounts[f.id] || 0;
+          <div className="flex gap-1 overflow-x-auto -mx-1 px-1 pb-1 rise" style={{ "--i": 1 }} role="group" aria-label="Filter">
+            {filters.map((f) => {
               const isActive = activeFilter === f.id;
-
               return (
                 <button
                   key={f.id}
                   onClick={() => setActiveFilter(f.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-                    isActive
-                      ? "bg-[#1F2E3D] text-[#FAF8F5] font-semibold shadow-2xs"
-                      : "bg-white text-[#52555F] hover:bg-[#F2ECE1] border border-[#DDD6C9]"
+                  aria-pressed={isActive}
+                  className={`h-9 px-3.5 rounded-md text-[14px] flex items-center gap-2 shrink-0 transition-colors ${
+                    isActive ? "bg-ink text-paper" : "text-ink-2 hover:bg-tint hover:text-ink"
                   }`}
                 >
                   <span>{f.label}</span>
-                  <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                      isActive ? "bg-white/20 text-white" : "bg-[#F0EAE0] text-[#6B6F7B]"
-                    }`}
-                  >
-                    {count}
+                  <span className={`tabular text-[13px] ${isActive ? "text-paper/60" : "text-ink-3"}`}>
+                    {filterCounts[f.id] || 0}
                   </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Words Display: Grid vs Table */}
           {filteredWords.length === 0 ? (
-            <div className="p-12 text-center bg-white rounded-2xl border border-[#E4DDD1] space-y-3">
-              <Library className="w-8 h-8 mx-auto text-[#B85D38]" />
-              <h3 className="font-serif font-bold text-base text-[#1A1A1E]">
-                No vocabulary words match this filter
-              </h3>
-              <p className="text-xs text-[#6B6F7B]">
-                Capture words from your reading, writing workspace, or book rewriting sessions.
+            <div className="sheet px-6 py-16 text-center rise" style={{ "--i": 2 }}>
+              <Books size={34} className="mx-auto text-pen" />
+              <h2 className="mt-4 font-serif text-[24px] font-medium">No words match</h2>
+              <p className="mt-1 text-[15px] text-ink-2">
+                Save words from your reading, your drafts or a book session, and they will appear here.
               </p>
+              <button onClick={() => openCaptureModal()} className="btn btn-quiet mt-6">
+                Save a word
+              </button>
             </div>
-          ) : viewMode === "grid" ? (
-            /* Card Grid View */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredWords.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => setInspectingWord(item)}
-                  className="bg-white p-5 rounded-2xl border border-[#E4DDD1] shadow-2xs hover:border-[#C5BCAD] hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between space-y-4 group"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-serif font-bold text-lg text-[#1A1A1E] group-hover:text-[#B85D38] transition-colors">
-                          {item.word}
-                        </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#EFE9DD] text-[#555861] font-medium">
-                          {item.pos}
-                        </span>
+          ) : viewMode === "entries" ? (
+            <div className="sheet px-2 sm:px-4 py-3 rise" style={{ "--i": 2 }}>
+              <ul className="grid md:grid-cols-2 gap-x-4">
+                {filteredWords.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      onClick={() => setInspectingWord(item)}
+                      className="w-full text-left rounded-lg px-4 sm:px-5 py-5 hover:bg-paper transition-colors group h-full"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-baseline gap-2.5 min-w-0">
+                          <span className="font-serif text-[26px] leading-tight font-medium tracking-[-0.01em] truncate">
+                            {item.word}
+                          </span>
+                          <span className="font-serif italic text-[15px] text-ink-3">{item.pos?.toLowerCase()}</span>
+                        </div>
+                        <StatusTag status={item.status} />
                       </div>
-                      <span
-                        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
-                          item.status === "mastered"
-                            ? "bg-[#DCFCE7] text-[#065F46]"
-                            : item.status === "practicing"
-                            ? "bg-[#FEF3C7] text-[#92400E]"
-                            : "bg-[#FAF0E6] text-[#B85D38]"
-                        }`}
-                      >
-                        {item.status}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-[#4A4D55] font-serif leading-relaxed line-clamp-2">
-                      {item.correctDef}
-                    </p>
-
-                    {item.personalDef && (
-                      <div className="pt-1 text-[11px] text-[#6B6F7B] italic">
-                        My definition: "{item.personalDef}"
+                      <p className="mt-2 font-serif text-[16.5px] leading-[1.5] text-ink line-clamp-2">{item.correctDef}</p>
+                      {item.personalDef && (
+                        <p className="mt-2 text-[14px] text-ink-2 line-clamp-1">
+                          <span className="text-ink-3">Mine: </span>
+                          {item.personalDef}
+                        </p>
+                      )}
+                      <div className="mt-3 flex items-center justify-between text-[13px] text-ink-3">
+                        <span className="tabular">
+                          Used {item.timesUsed} {item.timesUsed === 1 ? "time" : "times"} · {item.confidence} confidence
+                        </span>
+                        <ArrowRight
+                          size={15}
+                          className="transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
+                          aria-hidden="true"
+                        />
                       </div>
-                    )}
-                  </div>
-
-                  <div className="pt-3 border-t border-[#F2EDE4] flex items-center justify-between text-[11px] text-[#7A7E8B]">
-                    <div className="flex items-center gap-2">
-                      <span>Used {item.timesUsed}x</span>
-                      <span>•</span>
-                      <span>{item.confidence} confidence</span>
-                    </div>
-                    <span className="text-[#1F2E3D] font-semibold group-hover:translate-x-0.5 transition-transform flex items-center">
-                      Details <ChevronRight className="w-3 h-3" />
-                    </span>
-                  </div>
-                </div>
-              ))}
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           ) : (
-            /* Clean Editorial Table View */
-            <div className="bg-white rounded-2xl border border-[#E4DDD1] shadow-2xs overflow-hidden">
-              <table className="w-full text-left border-collapse text-xs">
+            <div className="sheet overflow-x-auto rise" style={{ "--i": 2 }}>
+              <table className="w-full text-left text-[14px] min-w-[720px]">
                 <thead>
-                  <tr className="border-b border-[#E8E2D8] bg-[#FAF8F5] text-[10px] font-bold uppercase tracking-wider text-[#8A8D96]">
-                    <th className="py-3 px-5">Word</th>
-                    <th className="py-3 px-4">Part of Speech</th>
-                    <th className="py-3 px-4">Master Meaning</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-center">Usage</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                  <tr className="text-[13px] text-ink-3">
+                    <th className="font-normal py-4 px-6">Word</th>
+                    <th className="font-normal py-4 px-4">Part of speech</th>
+                    <th className="font-normal py-4 px-4">Meaning</th>
+                    <th className="font-normal py-4 px-4">Status</th>
+                    <th className="font-normal py-4 px-4 text-right">Used</th>
+                    <th className="py-4 px-6">
+                      <span className="sr-only">Actions</span>
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#F2EDE4] font-serif">
+                <tbody>
                   {filteredWords.map((item) => (
                     <tr
                       key={item.id}
                       onClick={() => setInspectingWord(item)}
-                      className="hover:bg-[#FAF8F5] transition-colors cursor-pointer"
+                      className="border-t border-tint hover:bg-paper transition-colors cursor-pointer"
                     >
-                      <td className="py-3.5 px-5 font-bold text-[#1A1A1E]">
-                        {item.word}
+                      <td className="py-4 px-6 font-serif text-[18px]">{item.word}</td>
+                      <td className="py-4 px-4 text-ink-2">{item.pos}</td>
+                      <td className="py-4 px-4 font-serif text-[15.5px] text-ink-2 max-w-xs truncate">{item.correctDef}</td>
+                      <td className="py-4 px-4">
+                        <StatusTag status={item.status} />
                       </td>
-                      <td className="py-3.5 px-4 font-sans text-[#6B6F7B]">
-                        {item.pos}
-                      </td>
-                      <td className="py-3.5 px-4 text-[#3E414A] max-w-xs truncate">
-                        {item.correctDef}
-                      </td>
-                      <td className="py-3.5 px-4 font-sans">
-                        <span
-                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
-                            item.status === "mastered"
-                              ? "bg-[#DCFCE7] text-[#065F46]"
-                              : item.status === "practicing"
-                              ? "bg-[#FEF3C7] text-[#92400E]"
-                              : "bg-[#FAF0E6] text-[#B85D38]"
-                          }`}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-center font-mono font-bold text-[#1A1A1E]">
-                        {item.timesUsed}x
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-sans">
+                      <td className="py-4 px-4 text-right tabular">{item.timesUsed}</td>
+                      <td className="py-4 px-6 text-right">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setPracticeWord(item);
                           }}
-                          className="px-2.5 py-1 text-[11px] font-semibold text-[#1F2E3D] hover:bg-[#F2ECE1] rounded border border-[#DDD6C9] cursor-pointer"
+                          className="btn btn-quiet btn-sm"
                         >
                           Practice
                         </button>
@@ -282,20 +216,13 @@ export default function VocabularyLibrary() {
             </div>
           )}
 
-          {/* Word Detail Drawer */}
           <VocabDetailDrawer
             wordItem={inspectingWord}
             isOpen={!!inspectingWord}
             onClose={() => setInspectingWord(null)}
             onStartPractice={(item) => setPracticeWord(item)}
           />
-
-          {/* Spaced Practice Drill Modal */}
-          <SpacedPracticeModal
-            wordItem={practiceWord}
-            isOpen={!!practiceWord}
-            onClose={() => setPracticeWord(null)}
-          />
+          <SpacedPracticeModal wordItem={practiceWord} isOpen={!!practiceWord} onClose={() => setPracticeWord(null)} />
         </div>
       )}
     </AppLayout>
