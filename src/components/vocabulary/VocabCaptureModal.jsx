@@ -1,12 +1,7 @@
 import React, { useState } from "react";
-import {
-  X,
-  BookMarked,
-  Sparkles,
-  CheckCircle2,
-  ArrowRight
-} from "lucide-react";
+import { X, CheckCircle, ArrowRight } from "@phosphor-icons/react";
 import { useScribe } from "../../store";
+import { Dialog } from "../ui/Dialog";
 
 // Built-in intelligent dictionary data for authentic feedback
 const DICTIONARY_DATABASE = {
@@ -134,210 +129,145 @@ const VocabCaptureDialog = ({ onClose, initialWord = "", initialContext = "" }) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-2xs animate-in fade-in duration-150">
-      <div className="bg-[#FAF8F5] border border-[#E4DDD1] rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-[#E8E2D8] flex items-center justify-between sticky top-0 bg-[#FAF8F5]/95 backdrop-blur-xs z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#FAF0E6] text-[#B85D38] flex items-center justify-center">
-              <BookMarked className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="font-serif font-bold text-base text-[#1A1A1E]">
-                Save to Vocabulary
-              </h2>
-              <p className="text-[11px] text-[#6B6F7B]">
-                Active acquisition: define first, verify second
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg text-[#848792] hover:text-[#1A1A1E] hover:bg-[#EAE4D9]/60 transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
+    <Dialog onClose={onClose} labelledBy="capture-title" width="sm:max-w-xl">
+      <div className="px-6 pt-6 flex items-start justify-between gap-4">
+        <div>
+          <h2 id="capture-title" className="font-serif text-[28px] leading-tight font-medium">
+            Save a word
+          </h2>
+          <p className="mt-1 text-[14px] text-ink-2">Define it yourself first, then check it.</p>
+        </div>
+        <button onClick={onClose} className="btn btn-ghost btn-icon -mr-2" aria-label="Close">
+          <X size={18} />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-5">
+        <div>
+          <label htmlFor="capture-word" className="block text-[14px] font-medium mb-2">
+            Word
+          </label>
+          <input
+            id="capture-word"
+            type="text"
+            value={word}
+            onChange={(e) => setWord(e.target.value)}
+            placeholder="mitigate, precipice, formidable"
+            disabled={revealed}
+            autoFocus={!initialWord}
+            className="field font-serif text-[20px] h-12"
+          />
         </div>
 
-        {/* Form Body */}
-        <div className="p-6 space-y-5">
-          {/* Word Input */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#6B6F7B] mb-1.5">
-              Target Word <span className="text-[#B85D38]">*</span>
+        {contextSentence && (
+          <div className="rounded-lg bg-paper p-4">
+            <div className="text-[13px] text-ink-3">Where you found it</div>
+            <p className="mt-1 font-serif italic text-[16px] leading-relaxed">&ldquo;{contextSentence}&rdquo;</p>
+          </div>
+        )}
+
+        <div>
+          <div className="flex items-baseline justify-between gap-3 mb-2">
+            <label htmlFor="capture-def" className="text-[14px] font-medium">
+              What you think it means
             </label>
-            <input
-              type="text"
-              value={word}
-              onChange={(e) => setWord(e.target.value)}
-              placeholder="e.g. mitigate, precipice, formidable"
-              disabled={revealed}
-              className="w-full px-3.5 py-2.5 bg-white border border-[#DDD6C9] rounded-xl text-base font-serif font-semibold text-[#1A1A1E] focus:outline-hidden focus:border-[#1F2E3D] focus:ring-1 focus:ring-[#1F2E3D] transition-all disabled:bg-[#F2ECE1]/50"
-            />
+            <span className="text-[13px] text-ink-3 hidden sm:inline">Before you see the dictionary</span>
           </div>
+          <textarea
+            id="capture-def"
+            rows={3}
+            value={userDefinition}
+            onChange={(e) => setUserDefinition(e.target.value)}
+            placeholder="To make something less bad or less painful."
+            disabled={revealed}
+            autoFocus={!!initialWord}
+            className="field font-serif text-[16px] leading-relaxed resize-none"
+          />
+        </div>
 
-          {/* Context Sentence (if available) */}
-          {contextSentence && (
-            <div className="p-3 bg-[#F4EFE6] border border-[#E5DDD0] rounded-xl">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-[#8A8D96] mb-1">
-                Context from your writing
-              </div>
-              <p className="font-serif italic text-xs text-[#3A3D44] leading-relaxed">
-                "{contextSentence}"
-              </p>
-            </div>
-          )}
-
-          {/* Step 1: User's Own Definition */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#6B6F7B]">
-                My Definition <span className="text-[#B85D38]">*</span>
-              </label>
-              <span className="text-[11px] text-[#8C909B] italic">
-                Enter your understanding before viewing the AI definition
-              </span>
-            </div>
-            <textarea
-              rows={3}
-              value={userDefinition}
-              onChange={(e) => setUserDefinition(e.target.value)}
-              placeholder="e.g., To make something less bad or less painful."
-              disabled={revealed}
-              className="w-full px-3.5 py-2.5 bg-white border border-[#DDD6C9] rounded-xl text-xs font-serif text-[#1A1A1E] leading-relaxed focus:outline-hidden focus:border-[#1F2E3D] focus:ring-1 focus:ring-[#1F2E3D] transition-all disabled:bg-[#F2ECE1]/50 resize-none"
-            />
+        {!revealed ? (
+          <div>
+            <button
+              type="button"
+              onClick={handleReveal}
+              disabled={!word.trim() || !userDefinition.trim()}
+              className="btn btn-primary w-full h-11"
+            >
+              <span>Check against the dictionary</span>
+              <ArrowRight size={16} />
+            </button>
+            <p className="mt-3 text-[13px] text-center text-ink-3">
+              Recalling a meaning before you look it up is what makes it stick.
+            </p>
           </div>
-
-          {/* Reveal Button (if not yet revealed) */}
-          {!revealed ? (
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={handleReveal}
-                disabled={!word.trim() || !userDefinition.trim()}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#1F2E3D] hover:bg-[#15202B] disabled:bg-[#CCC5B8] disabled:cursor-not-allowed text-[#FAF8F5] text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer"
-              >
-                <span>Verify with AI Definition</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-              <p className="text-[11px] text-center text-[#8C909B] mt-2">
-                This deliberate recall step dramatically strengthens long-term lexical retention.
-              </p>
-            </div>
-          ) : (
-            /* Step 2: Revealed AI Definition & Analysis */
-            <div className="space-y-4 pt-2 border-t border-[#E8E2D8] animate-in fade-in slide-in-from-top-2 duration-200">
-              {/* Meaning & Part of speech */}
-              <div className="p-4 bg-white border border-[#E0D9CD] rounded-xl space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-serif font-bold text-lg text-[#1A1A1E]">
-                      {word}
-                    </span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#EFE9DD] text-[#555861] font-medium">
-                      {definitionData.pos}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[11px] font-semibold text-[#059669]">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Dictionary Verified</span>
-                  </div>
+        ) : (
+          <div className="space-y-5 fade">
+            <div className="rounded-lg bg-paper p-5 space-y-4">
+              <div className="flex items-baseline justify-between gap-3">
+                <div className="flex items-baseline gap-2.5">
+                  <span className="font-serif text-[24px] font-medium">{word}</span>
+                  <span className="font-serif italic text-[15px] text-ink-3">{definitionData.pos.toLowerCase()}</span>
                 </div>
-
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-[#8A8D96] mb-0.5">
-                    Correct Meaning
-                  </div>
-                  <p className="font-serif text-xs text-[#2A2D33] leading-relaxed">
-                    {definitionData.correctDef}
-                  </p>
-                </div>
-
-                {/* Common Usage & Collocations */}
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-[#8A8D96] mb-1.5">
-                    Common Collocations
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {definitionData.collocations.map((colloc, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-1 bg-[#F5F1E9] text-[#2C313C] rounded-md text-[11px] font-mono border border-[#E5DFD4]"
-                      >
-                        {colloc}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Exemplary sentence */}
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-[#8A8D96] mb-0.5">
-                    Literary Example
-                  </div>
-                  <p className="font-serif italic text-xs text-[#52555F] bg-[#FAF8F5] p-2.5 rounded-lg border border-[#EDE7DC]">
-                    "{definitionData.example}"
-                  </p>
-                </div>
-
-                {/* Accuracy feedback comparing user's definition */}
-                <div className="p-2.5 rounded-lg bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46] text-xs flex items-start gap-2">
-                  <Sparkles className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold">Pedagogical check: </span>
-                    Your definition captured the core meaning effectively. Practicing its common collocations will lock it in.
-                  </div>
-                </div>
+                <span className="flex items-center gap-1 text-[13px] text-good">
+                  <CheckCircle size={15} weight="fill" />
+                  <span>In the dictionary</span>
+                </span>
               </div>
-
-              {/* Confidence Level */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#6B6F7B] mb-1.5">
-                  Initial Confidence Level
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { key: "low", label: "Learning (Low)" },
-                    { key: "medium", label: "Familiar (Medium)" },
-                    { key: "high", label: "Mastered (High)" }
-                  ].map((lvl) => (
-                    <button
-                      key={lvl.key}
-                      type="button"
-                      onClick={() => setConfidence(lvl.key)}
-                      className={`py-2 px-3 text-xs rounded-xl font-medium border transition-all cursor-pointer ${
-                        confidence === lvl.key
-                          ? "bg-[#1F2E3D] text-[#FAF8F5] border-[#1F2E3D]"
-                          : "bg-white text-[#52555F] border-[#DDD6C9] hover:bg-[#F8F5EE]"
-                      }`}
-                    >
-                      {lvl.label}
-                    </button>
+                <div className="text-[13px] text-ink-3">Meaning</div>
+                <p className="mt-1 font-serif text-[17px] leading-relaxed">{definitionData.correctDef}</p>
+              </div>
+              <div>
+                <div className="text-[13px] text-ink-3">Goes with</div>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {definitionData.collocations.map((colloc, idx) => (
+                    <span key={idx} className="tag bg-sheet font-serif text-[14.5px] h-7">
+                      {colloc}
+                    </span>
                   ))}
                 </div>
               </div>
+              <div>
+                <div className="text-[13px] text-ink-3">In a sentence</div>
+                <p className="mt-1 font-serif italic text-[16px] text-ink-2">&ldquo;{definitionData.example}&rdquo;</p>
+              </div>
+              <p className="text-[14px] text-good">
+                Your meaning caught the core of it. Practice the phrases above to lock it in.
+              </p>
+            </div>
 
-              {/* Final Actions */}
-              <div className="flex items-center gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setRevealed(false)}
-                  className="px-4 py-2.5 text-xs font-medium text-[#6B6F7B] hover:text-[#1A1A1E] transition-colors cursor-pointer"
-                >
-                  Edit definition
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  className="flex-1 py-2.5 px-4 bg-[#B85D38] hover:bg-[#A04F2E] text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer"
-                >
-                  Save to Vocabulary Library
-                </button>
+            <div>
+              <div className="text-[14px] font-medium mb-2">How well do you know it?</div>
+              <div className="seg w-full" role="group" aria-label="Confidence">
+                {[
+                  { key: "low", label: "Still learning" },
+                  { key: "medium", label: "Familiar" },
+                  { key: "high", label: "I know it" }
+                ].map((lvl) => (
+                  <button
+                    key={lvl.key}
+                    type="button"
+                    onClick={() => setConfidence(lvl.key)}
+                    aria-pressed={confidence === lvl.key}
+                    className="seg-item flex-1"
+                  >
+                    {lvl.label}
+                  </button>
+                ))}
               </div>
             </div>
-          )}
-        </div>
+
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={() => setRevealed(false)} className="btn btn-ghost">
+                Edit my meaning
+              </button>
+              <button type="button" onClick={handleSave} className="btn btn-pen flex-1 h-11">
+                Save to my vocabulary
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </Dialog>
   );
 };
