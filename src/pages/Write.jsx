@@ -1,36 +1,24 @@
-import React, { useState, useRef } from "react";
-import {
-  Sparkles,
-  Maximize2,
-  Minimize2,
-  BookMarked,
-  Eye,
-  Sliders,
-  CheckCircle2,
-  HelpCircle,
-  Clock,
-  FileText,
-  Type,
-  Plus
-} from "lucide-react";
+import React, { useState } from "react";
+import { ArrowsOut, ArrowsIn, BookmarkSimple, CheckCircle, ChatCircleText } from "@phosphor-icons/react";
 import { useScribe } from "../store/scribeContext";
 import { AppLayout } from "../components/layout/AppLayout";
 import { CoachPanel } from "../components/coach/CoachPanel";
 
+const sizes = { base: "text-[18px]", lg: "text-[20px]", xl: "text-[23px]" };
+const sizeLabels = { base: "Normal", lg: "Large", xl: "Larger" };
+const nextSize = { base: "lg", lg: "xl", xl: "base" };
+
 export default function Write() {
-  const { state, updateWritingDraft, updateCoachSettings, addBookSessionWord } = useScribe();
+  const { state, updateWritingDraft, updateCoachSettings } = useScribe();
   const { writingWorkspace } = state;
-  const { text, coachEnabled, issues, coachLevel } = writingWorkspace;
+  const { text, coachEnabled, issues } = writingWorkspace;
 
   const [activeIssue, setActiveIssue] = useState(issues[0] || null);
   const [zenMode, setZenMode] = useState(false);
-  const [selectionAction, setSelectionAction] = useState(null); // { word, context, top, left }
+  const [selectionAction, setSelectionAction] = useState(null);
+  const [fontFamily, setFontFamily] = useState("serif");
+  const [fontSize, setFontSize] = useState("base");
 
-  // Font family selector
-  const [fontFamily, setFontFamily] = useState("serif"); // 'serif' | 'sans'
-  const [fontSize, setFontSize] = useState("base"); // 'base' | 'lg' | 'xl'
-
-  // Word & reading stats
   const wordCount = (text || "").trim().split(/\s+/).filter(Boolean).length;
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
@@ -42,179 +30,133 @@ export default function Write() {
     }
     const selectedText = selection.toString().trim();
     if (selectedText && selectedText.split(/\s+/).length <= 2 && selectedText.length > 2) {
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
+      const rect = selection.getRangeAt(0).getBoundingClientRect();
       setSelectionAction({
         word: selectedText.replace(/[^a-zA-Z-]/g, ""),
-        top: rect.top - 46,
-        left: rect.left + rect.width / 2 - 60
+        top: rect.top - 48,
+        left: rect.left + rect.width / 2 - 64
       });
     } else {
       setSelectionAction(null);
     }
   };
 
+  const face = fontFamily === "serif" ? "font-serif" : "font-sans";
+
   return (
     <AppLayout
-      title="Writing Workspace"
-      subtitle="Distraction-free composing with guided pedagogical coaching"
+      title="Write"
+      subtitle="A quiet page, with a coach that asks instead of rewriting"
       hideTopHeader={zenMode}
+      compactHeader
     >
       {({ openCaptureModal }) => (
-        <div className="flex h-full min-h-[calc(100vh-4rem)] overflow-hidden bg-[#FAF8F5]">
-          {/* Main Writing Canvas */}
-          <div className="flex-1 flex flex-col overflow-hidden relative">
-            {/* Editor Toolbar */}
-            <div className="h-12 border-b border-[#E8E2D8] bg-white px-8 flex items-center justify-between shrink-0 text-xs text-[#52555F]">
-              {/* Left Style Controls */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1 bg-[#F5F2EB] p-1 rounded-lg border border-[#E5DFD4]">
+        <div
+          className={`flex flex-col lg:flex-row bg-paper ${
+            zenMode ? "h-[100dvh]" : "lg:h-[calc(100dvh-4rem)]"
+          } overflow-hidden`}
+        >
+          <div className="flex-1 flex flex-col min-w-0 bg-sheet lg:rounded-tr-[10px]">
+            {/* Toolbar */}
+            <div className="h-14 px-4 sm:px-8 flex items-center justify-between gap-3 shrink-0 text-[13px] text-ink-3">
+              <div className="flex items-center gap-3">
+                <div className="seg" role="group" aria-label="Typeface">
                   <button
                     onClick={() => setFontFamily("serif")}
-                    className={`px-2.5 py-0.5 rounded text-xs transition-colors cursor-pointer ${
-                      fontFamily === "serif"
-                        ? "bg-[#1F2E3D] text-white font-bold"
-                        : "text-[#6B6F7B] hover:text-[#1A1A1E]"
-                    }`}
+                    aria-pressed={fontFamily === "serif"}
+                    className="seg-item font-serif text-[14px]"
                   >
-                    Serif Editorial
+                    Serif
                   </button>
                   <button
                     onClick={() => setFontFamily("sans")}
-                    className={`px-2.5 py-0.5 rounded text-xs transition-colors cursor-pointer ${
-                      fontFamily === "sans"
-                        ? "bg-[#1F2E3D] text-white font-bold"
-                        : "text-[#6B6F7B] hover:text-[#1A1A1E]"
-                    }`}
+                    aria-pressed={fontFamily === "sans"}
+                    className="seg-item"
                   >
-                    Sans Modern
+                    Sans
                   </button>
                 </div>
-
-                <div className="flex items-center gap-1.5 text-[11px] text-[#7A7E8B]">
-                  <span>Size:</span>
-                  <button
-                    onClick={() => setFontSize(fontSize === "base" ? "lg" : fontSize === "lg" ? "xl" : "base")}
-                    className="font-mono px-2 py-0.5 bg-[#FAF8F5] border border-[#DDD6C9] rounded font-semibold text-[#1A1A1E] cursor-pointer"
-                  >
-                    {fontSize.toUpperCase()}
-                  </button>
-                </div>
+                <button
+                  onClick={() => setFontSize(nextSize[fontSize])}
+                  className="btn btn-ghost btn-sm"
+                  title="Change text size"
+                >
+                  {sizeLabels[fontSize]}
+                </button>
               </div>
 
-              {/* Right Stats & Coach Toggle */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3 text-xs text-[#6B6F7B]">
-                  <span>{wordCount} words</span>
-                  <span>•</span>
-                  <span>~{readingTime} min read</span>
-                </div>
-
-                {/* Zen mode toggle */}
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="hidden sm:inline tabular mr-2">
+                  {wordCount} words · {readingTime} min read
+                </span>
                 <button
                   onClick={() => setZenMode(!zenMode)}
-                  className="p-1.5 rounded-lg text-[#7C808E] hover:text-[#1A1A1E] hover:bg-[#F2ECE1] transition-colors cursor-pointer"
-                  title={zenMode ? "Exit Zen Mode" : "Focus / Zen Mode"}
+                  className="btn btn-ghost btn-icon"
+                  aria-label={zenMode ? "Leave focus mode" : "Focus mode"}
+                  title={zenMode ? "Leave focus mode" : "Focus mode"}
                 >
-                  {zenMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                  {zenMode ? <ArrowsIn size={18} /> : <ArrowsOut size={18} />}
                 </button>
-
-                {/* Coach Switch */}
                 <button
-                  onClick={() =>
-                    updateCoachSettings({ coachEnabled: !coachEnabled })
-                  }
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    coachEnabled
-                      ? "bg-[#FAF0E6] text-[#B85D38] border border-[#F0DDCB]"
-                      : "bg-[#F2ECE1] text-[#6B6F7B] hover:text-[#1A1A1E]"
-                  }`}
+                  onClick={() => updateCoachSettings({ coachEnabled: !coachEnabled })}
+                  aria-pressed={coachEnabled}
+                  className={`btn btn-sm ${coachEnabled ? "btn-quiet" : "btn-ghost"}`}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Coach {coachEnabled ? "Active" : "Off"}</span>
+                  <ChatCircleText size={16} weight={coachEnabled ? "fill" : "regular"} className={coachEnabled ? "text-pen" : ""} />
+                  <span>{coachEnabled ? "Coach on" : "Coach off"}</span>
                 </button>
               </div>
             </div>
 
-            {/* Document Title & Writing Surface */}
-            <div
-              className="flex-1 overflow-y-auto p-12 lg:p-16 flex justify-center"
-              onMouseUp={handleTextSelect}
-            >
-              <div className="w-full max-w-2xl space-y-6">
-                {/* Title */}
+            {/* Page */}
+            <div className="flex-1 overflow-y-auto px-5 sm:px-12 py-10 lg:py-16 flex justify-center" onMouseUp={handleTextSelect}>
+              <div className="w-full max-w-[680px]">
                 <input
                   type="text"
                   defaultValue="On Deliberate Practice & Prose Architecture"
-                  placeholder="Untitled Document..."
-                  className={`w-full bg-transparent border-none outline-hidden font-bold text-2xl text-[#1A1A1E] placeholder:text-[#A8A49C] tracking-tight ${
-                    fontFamily === "serif" ? "font-serif" : "font-sans"
-                  }`}
+                  placeholder="Untitled"
+                  aria-label="Title"
+                  className={`w-full bg-transparent border-none outline-none text-[30px] sm:text-[36px] leading-[1.1] font-medium tracking-[-0.02em] placeholder:text-ink-3/60 ${face}`}
                 />
-
-                {/* Body Textarea */}
                 <textarea
                   value={text}
                   onChange={(e) => updateWritingDraft(e.target.value)}
-                  placeholder="Sit down. Think. Write. Improve...
-                  
-Start typing your essay, journal entry, or chapter here..."
-                  className={`w-full min-h-[600px] bg-transparent border-none outline-hidden resize-none leading-[1.9] text-[#1A1A1E] placeholder:text-[#AAA69D] ${
-                    fontFamily === "serif" ? "font-serif-prose" : "font-sans"
-                  } ${
-                    fontSize === "base"
-                      ? "text-base"
-                      : fontSize === "lg"
-                      ? "text-lg"
-                      : "text-xl"
-                  }`}
+                  aria-label="Your writing"
+                  placeholder="Sit down. Think. Write. Then make it better."
+                  className={`mt-6 w-full min-h-[60vh] bg-transparent border-none outline-none resize-none leading-[1.75] text-ink placeholder:text-ink-3/60 ${face} ${sizes[fontSize]}`}
                 />
               </div>
 
-              {/* Floating Contextual Pill for Selection */}
               {selectionAction && (
                 <div
-                  style={{
-                    position: "fixed",
-                    top: `${selectionAction.top}px`,
-                    left: `${selectionAction.left}px`
-                  }}
-                  className="z-50 bg-[#1F2E3D] text-white px-3 py-1.5 rounded-lg shadow-xl text-xs font-semibold flex items-center gap-2 animate-in fade-in zoom-in-95 duration-100"
+                  style={{ position: "fixed", top: `${selectionAction.top}px`, left: `${selectionAction.left}px` }}
+                  className="z-50 pop"
                 >
                   <button
                     onClick={() => {
                       openCaptureModal(selectionAction.word, `Found in writing: "${selectionAction.word}"`);
                       setSelectionAction(null);
                     }}
-                    className="hover:text-[#B85D38] flex items-center gap-1 cursor-pointer"
+                    className="btn btn-primary btn-sm shadow-[0_8px_24px_-8px_rgb(22_24_28/0.4)]"
                   >
-                    <BookMarked className="w-3.5 h-3.5 text-[#B85D38]" />
-                    <span>+ Save Word</span>
+                    <BookmarkSimple size={15} weight="fill" className="text-pen" />
+                    <span>Save "{selectionAction.word}"</span>
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Subtle Progress Bar */}
-            <div className="h-8 border-t border-[#E8E2D8] bg-white px-8 flex items-center justify-between text-[11px] text-[#7A7E8B]">
-              <div className="flex items-center gap-4">
-                <span>Natural writing rhythm: uninhibited drafting</span>
-                <span>•</span>
-                <span>3 vocabulary words applied</span>
-              </div>
-              <div className="text-[#059669] font-medium flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                <span>Changes saved to local store</span>
-              </div>
+            <div className="h-10 px-4 sm:px-8 flex items-center justify-between gap-4 text-[13px] text-ink-3 shrink-0">
+              <span className="truncate">3 saved words used in this draft</span>
+              <span className="flex items-center gap-1.5 text-good shrink-0">
+                <CheckCircle size={14} weight="fill" />
+                <span>Saved</span>
+              </span>
             </div>
           </div>
 
-          {/* Right AI Writing Coach Panel */}
           {coachEnabled && (
-            <CoachPanel
-              activeIssueId={activeIssue?.id}
-              onSelectIssue={(issue) => setActiveIssue(issue)}
-            />
+            <CoachPanel activeIssueId={activeIssue?.id} onSelectIssue={(issue) => setActiveIssue(issue)} />
           )}
         </div>
       )}
