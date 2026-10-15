@@ -51,7 +51,7 @@ export default function RevisionMode() {
             {revisionQueue.map((item, idx) => (
               <span
                 key={item.id}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
+                className={`h-1.5 rounded-full transition-[width,background-color] duration-300 ${
                   idx === currentIndex ? "w-8 bg-pen" : idx < currentIndex ? "w-4 bg-ink" : "w-4 bg-tint-2"
                 }`}
               />
