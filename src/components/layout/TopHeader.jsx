@@ -70,7 +70,7 @@ export const StartSessionMenu = ({ align = "right" }) => {
       {open && (
         <div
           role="menu"
-          className={`pop absolute ${align === "right" ? "right-0" : "left-0"} mt-2 w-72 bg-sheet rounded-lg p-1.5 z-50 shadow-[0_12px_32px_-12px_rgb(22_24_28/0.28),0_2px_6px_rgb(22_24_28/0.06)]`}
+          className={`pop absolute ${align === "right" ? "right-0" : align === "left" ? "left-0" : "left-0 md:left-auto md:right-0"} mt-2 w-72 bg-sheet rounded-lg p-1.5 z-50 shadow-[0_12px_32px_-12px_rgb(22_24_28/0.28),0_2px_6px_rgb(22_24_28/0.06)]`}
         >
           {sessionModes.map((mode) => {
             const Icon = mode.icon;
@@ -126,12 +126,12 @@ export const TopHeader = ({ title, subtitle, onOpenCaptureModal, compact = false
           </h1>
           {subtitle && <p className="mt-3 text-[16px] text-ink-2 max-w-[60ch]">{subtitle}</p>}
         </div>
-        <div className="hidden md:flex items-center gap-2 shrink-0 rise" style={{ "--i": 1 }}>
-          <button onClick={onOpenCaptureModal} className="btn btn-ghost">
+        <div className="flex items-center gap-2 shrink-0 rise" style={{ "--i": 1 }}>
+          <button onClick={onOpenCaptureModal} className="btn btn-ghost hidden md:inline-flex">
             <BookmarkSimple size={17} className="text-pen" />
             <span>Save a word</span>
           </button>
-          <StartSessionMenu />
+          <StartSessionMenu align="left-md-right" />
         </div>
       </div>
     </header>

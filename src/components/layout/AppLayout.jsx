@@ -4,6 +4,8 @@ import { Sidebar, Wordmark } from "./Sidebar";
 import { TopHeader } from "./TopHeader";
 import { VocabCaptureModal } from "../vocabulary/VocabCaptureModal";
 
+export const pageClass = "px-5 sm:px-8 lg:px-12 pb-24 max-w-[1240px] mx-auto w-full";
+
 export const AppLayout = ({ children, title, subtitle, hideTopHeader = false, compactHeader = false }) => {
   const [captureModalOpen, setCaptureModalOpen] = useState(false);
   const [captureInitialWord, setCaptureInitialWord] = useState("");
@@ -33,8 +35,10 @@ export const AppLayout = ({ children, title, subtitle, hideTopHeader = false, co
       </a>
 
       {/* Desktop rail */}
-      <div className="hidden lg:block sticky top-0 h-[100dvh] shrink-0">
-        <Sidebar onOpenCaptureModal={() => handleOpenCapture()} />
+      <div className="hidden lg:block shrink-0 bg-rail">
+        <div className="sticky top-0 h-[100dvh]">
+          <Sidebar onOpenCaptureModal={() => handleOpenCapture()} />
+        </div>
       </div>
 
       {/* Phone and tablet drawer */}
