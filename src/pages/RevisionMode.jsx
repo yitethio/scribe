@@ -56,7 +56,7 @@ export default function RevisionMode() {
                 }`}
               />
             ))}
-            <span className="ml-3 text-[14px] text-ink-2 tabular">
+            <span className="ml-3 text-[14px] text-ink-2 tabular whitespace-nowrap">
               Sentence {currentIndex + 1} of {revisionQueue.length}
             </span>
           </div>

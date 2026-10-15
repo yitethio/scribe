@@ -116,7 +116,7 @@ export default function Write() {
                   defaultValue="On Deliberate Practice & Prose Architecture"
                   placeholder="Untitled"
                   aria-label="Title"
-                  className={`w-full bg-transparent border-none outline-none text-[30px] sm:text-[36px] leading-[1.1] font-medium tracking-[-0.02em] placeholder:text-ink-3/60 ${face}`}
+                  className={`w-full bg-transparent border-none outline-none text-[24px] sm:text-[36px] leading-[1.1] font-medium tracking-[-0.02em] placeholder:text-ink-3/60 ${face}`}
                 />
                 <textarea
                   value={text}
