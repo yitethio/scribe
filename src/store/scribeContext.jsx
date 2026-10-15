@@ -240,15 +240,16 @@ export const ScribeProvider = ({ children }) => {
 
       {/* Global Toast Notification */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-[100] animate-in fade-in slide-in-from-bottom-3 duration-200">
-          <div className="flex items-center gap-3 px-4 py-3 bg-[#1A1A1E] text-[#FAF8F5] rounded-lg shadow-xl border border-white/10 text-sm font-medium">
-            <span className={`w-2 h-2 rounded-full ${toast.type === "success" ? "bg-emerald-400" : "bg-amber-400"}`} />
-            <span>{toast.message}</span>
+        <div className="fixed bottom-5 right-5 left-5 sm:left-auto z-[100] pop" role="status" aria-live="polite">
+          <div className="flex items-center gap-3 pl-4 pr-2 py-2 bg-ink text-paper rounded-lg text-[14px] shadow-[0_12px_32px_-12px_rgb(22_24_28/0.45)]">
+            <span className={`w-2 h-2 rounded-full shrink-0 ${toast.type === "success" ? "bg-[#7fc49b]" : "bg-[#e3b35c]"}`} />
+            <span className="flex-1">{toast.message}</span>
             <button
               onClick={() => setToast(null)}
-              className="ml-2 text-stone-400 hover:text-white transition-colors cursor-pointer"
+              aria-label="Dismiss"
+              className="w-8 h-8 rounded-md text-paper/60 hover:text-paper hover:bg-white/10 transition-colors"
             >
-              ✕
+              &times;
             </button>
           </div>
         </div>
