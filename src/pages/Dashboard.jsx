@@ -1,377 +1,256 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Flame,
-  BookOpen,
-  PenTool,
-  Trophy,
-  Sparkles,
-  ArrowRight,
-  TrendingUp,
-  Target,
-  Clock,
-  Compass,
-  CheckCircle2,
-  Calendar,
-  Layers,
-  ChevronRight
-} from "lucide-react";
+import { ArrowRight, BookOpenText, Trophy, PenNib } from "@phosphor-icons/react";
 import { useScribe } from "../store/scribeContext";
-import { AppLayout } from "../components/layout/AppLayout";
+import { AppLayout, pageClass } from "../components/layout/AppLayout";
+
+const MONTHLY_GOAL = 5000;
+
+const activityIcon = {
+  "Book Session": BookOpenText,
+  "Weekly Challenge": Trophy
+};
+
+const activityRoute = {
+  "Book Session": "/book-session",
+  "Weekly Challenge": "/challenges"
+};
+
+function Figure({ value, unit, label, note, noteTone = "text-ink-3", children, i }) {
+  return (
+    <div className="rise min-w-0" style={{ "--i": i }}>
+      <div className="flex items-baseline gap-1.5">
+        <span className="font-serif text-[48px] sm:text-[56px] leading-none tracking-[-0.03em] tabular">
+          {value}
+        </span>
+        {unit && <span className="text-[15px] text-ink-2">{unit}</span>}
+      </div>
+      <div className="mt-3 text-[14px] font-medium text-ink">{label}</div>
+      {children}
+      {note && <div className={`mt-1 text-[13px] ${noteTone}`}>{note}</div>}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { state } = useScribe();
   const { user, skills, vocabulary, bookSession, challenges, recentActivity } = state;
   const navigate = useNavigate();
+  const firstName = user.name.split(" ")[0];
+  const goalPercent = Math.round((user.wordsWrittenThisMonth / MONTHLY_GOAL) * 100);
+  const focusSkill = skills.find((s) => s.focus);
 
   return (
     <AppLayout
-      title="Personal Writing Journey"
-      subtitle="Deliberate practice, vocabulary acquisition, and revision lab"
+      title={`Welcome back, ${firstName}.`}
+      subtitle="The aim is not better essays written by AI. It is better essays written by you, because your instincts and vocabulary have grown."
     >
-      {({ openCaptureModal }) => (
-        <div className="p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-150">
-          {/* Personal Greeting & Philosophy Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#E8E2D8]">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#8A8D96] mb-1">
-                <span>{user.role}</span>
-                <span>•</span>
-                <span className="text-[#059669]">Day 12 of Habit Streak</span>
-              </div>
-              <h2 className="font-serif font-bold text-3xl text-[#1A1A1E] tracking-tight">
-                Welcome back, {user.name}
-              </h2>
-              <p className="text-xs text-[#5E626E] mt-1 max-w-2xl font-normal leading-relaxed">
-                The objective is not better essays written by AI, but better essays written by you because your instincts and vocabulary have deepened.
-              </p>
-            </div>
-
-            {/* Quick action buttons */}
-            <div className="flex items-center gap-3">
-              <Link
-                to="/write"
-                className="flex items-center gap-2 px-4 py-2.5 bg-[#1F2E3D] hover:bg-[#15202B] text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer"
-              >
-                <PenTool className="w-3.5 h-3.5" />
-                <span>Open Writing Canvas</span>
-              </Link>
-              <Link
-                to="/book-session"
-                className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-[#FAF8F5] text-[#1A1A1E] text-xs font-semibold rounded-xl border border-[#DDD6C9] shadow-2xs transition-all cursor-pointer"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-[#B85D38]" />
-                <span>Resume Book Rewrite</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Primary Metric Ribbon - Refined Hierarchy, Not SaaS Boxes */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Streak */}
-            <div className="p-5 bg-white rounded-2xl border border-[#E4DDD1] shadow-2xs hover:border-[#D5CDC0] transition-all">
-              <div className="flex items-center justify-between text-[#8A8D96] mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider">
-                  Consistency Streak
-                </span>
-                <Flame className="w-4 h-4 text-[#EA580C] fill-[#EA580C]" />
-              </div>
-              <div className="font-serif font-bold text-3xl text-[#1A1A1E] tracking-tight">
-                {user.streakDays} <span className="text-sm font-sans font-normal text-[#6B6F7B]">days</span>
-              </div>
-              <p className="text-[11px] text-[#059669] font-medium mt-1">
-                +4 days beyond personal record
-              </p>
-            </div>
-
-            {/* Words Written */}
-            <div className="p-5 bg-white rounded-2xl border border-[#E4DDD1] shadow-2xs hover:border-[#D5CDC0] transition-all">
-              <div className="flex items-center justify-between text-[#8A8D96] mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider">
-                  Words This Month
-                </span>
-                <Target className="w-4 h-4 text-[#1F2E3D]" />
-              </div>
-              <div className="font-serif font-bold text-3xl text-[#1A1A1E] tracking-tight">
-                {user.wordsWrittenThisMonth.toLocaleString()}
-              </div>
-              <p className="text-[11px] text-[#555862] font-medium mt-1">
-                Goal: 5,000 words (76% met)
-              </p>
-            </div>
-
-            {/* Vocabulary Learned */}
-            <div className="p-5 bg-white rounded-2xl border border-[#E4DDD1] shadow-2xs hover:border-[#D5CDC0] transition-all">
-              <div className="flex items-center justify-between text-[#8A8D96] mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider">
-                  Vocabulary Learned
-                </span>
-                <Sparkles className="w-4 h-4 text-[#B85D38]" />
-              </div>
-              <div className="font-serif font-bold text-3xl text-[#1A1A1E] tracking-tight">
-                {vocabulary.length} <span className="text-sm font-sans font-normal text-[#6B6F7B]">words</span>
-              </div>
-              <p className="text-[11px] text-[#059669] font-medium mt-1">
-                {user.vocabularyRetentionRate}% retention rate
-              </p>
-            </div>
-
-            {/* Guided Sessions Completed */}
-            <div className="p-5 bg-white rounded-2xl border border-[#E4DDD1] shadow-2xs hover:border-[#D5CDC0] transition-all">
-              <div className="flex items-center justify-between text-[#8A8D96] mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider">
-                  Guided Sessions
-                </span>
-                <Clock className="w-4 h-4 text-[#7C3AED]" />
-              </div>
-              <div className="font-serif font-bold text-3xl text-[#1A1A1E] tracking-tight">
-                {user.sessionsCompletedCount}
-              </div>
-              <p className="text-[11px] text-[#555862] font-medium mt-1">
-                Books, challenges & drills
-              </p>
-            </div>
-          </div>
-
-          {/* Current Focus & Pedagogical Recommendation */}
-          <div className="p-6 bg-[#F5EFE4] border border-[#E2D8C7] rounded-2xl shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="space-y-1.5 max-w-2xl">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#1F2E3D] text-[#FAF8F5]">
-                  Teacher's Directive
-                </span>
-                <span className="text-xs font-semibold text-[#B85D38]">
-                  Primary Skill Focus
-                </span>
-              </div>
-              <h3 className="font-serif font-bold text-xl text-[#1A1A1E]">
-                {user.currentFocus.title}
-              </h3>
-              <p className="font-serif text-xs text-[#3E424B] leading-relaxed">
-                "{user.currentFocus.description}"
-              </p>
-              <div className="pt-1 text-[11px] text-[#6B6F7B] flex items-center gap-1.5">
-                <Compass className="w-3.5 h-3.5 text-[#B85D38]" />
-                <span>Recommended drill: 150-word direct explanation without passive voice.</span>
-              </div>
-            </div>
-
-            <Link
-              to="/revision-mode"
-              className="px-4 py-2.5 bg-[#B85D38] hover:bg-[#A04F2E] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer"
-            >
-              <span>Launch Precision Drill</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          {/* Two-Column Grid: Writing Skill Matrix & Active Projects */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left 6 cols: Writing Skill Mastery Visualizer */}
-            <div className="lg:col-span-6 bg-white p-6 rounded-2xl border border-[#E4DDD1] shadow-2xs space-y-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-serif font-bold text-lg text-[#1A1A1E]">
-                    Writing Skill Matrix
-                  </h3>
-                  <p className="text-xs text-[#6B6F7B]">
-                    Multi-dimensional longitudinal diagnostic scores
-                  </p>
-                </div>
-                <Link
-                  to="/progress"
-                  className="text-xs font-semibold text-[#1F2E3D] hover:underline flex items-center gap-1"
-                >
-                  <span>Detailed Analytics</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-
-              <div className="space-y-4">
-                {skills.map((skill) => (
-                  <div key={skill.id} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-[#252830]">
-                          {skill.name}
-                        </span>
-                        {skill.focus && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-[#FAF0E6] text-[#B85D38]">
-                            Focus
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 font-mono text-xs">
-                        <span className="text-[#059669] font-medium">{skill.change}</span>
-                        <span className="font-bold text-[#1A1A1E]">{skill.score}/100</span>
-                      </div>
-                    </div>
-                    {/* Clean Progress Bar with deliberate proportion */}
-                    <div className="h-2 w-full bg-[#F2EDE4] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-700 ${
-                          skill.focus ? "bg-[#B85D38]" : "bg-[#1F2E3D]"
-                        }`}
-                        style={{ width: `${skill.score}%` }}
-                      />
-                    </div>
-                  </div>
+      <div className={`${pageClass} space-y-6 lg:space-y-8`}>
+        {/* The month in four numbers */}
+        <section aria-label="This month" className="sheet px-6 py-8 sm:px-10 sm:py-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
+            <Figure value={user.streakDays} unit="days" label="Writing streak" i={0}>
+              <div className="flex gap-1 mt-2.5 max-w-[140px]" aria-hidden="true">
+                {user.streakHistory.slice(0, 7).map((on, idx) => (
+                  <span key={idx} className={`h-1 flex-1 rounded-full ${on ? "bg-pen" : "bg-tint-2"}`} />
                 ))}
               </div>
+              <div className="mt-2 text-[13px] text-good">4 days past your record</div>
+            </Figure>
+            <Figure
+              value={user.wordsWrittenThisMonth.toLocaleString()}
+              label="Words this month"
+              note={`${goalPercent}% of the ${MONTHLY_GOAL.toLocaleString()} word goal`}
+              i={1}
+            />
+            <Figure
+              value={vocabulary.length}
+              unit="words"
+              label="Vocabulary saved"
+              note={`${user.vocabularyRetentionRate}% still remembered`}
+              noteTone="text-good"
+              i={2}
+            />
+            <Figure
+              value={user.sessionsCompletedCount}
+              label="Guided sessions"
+              note="Books, challenges and drills"
+              i={3}
+            />
+          </div>
+        </section>
 
-              <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#EDE7DC] flex items-center justify-between text-xs text-[#5E626E]">
-                <span>Cohesion improved by <strong>14%</strong> over the last 6 weeks</span>
-                <span className="font-bold text-[#1F2E3D]">Level IV Benchmark Met</span>
+        {/* The teacher's note, written in the margin */}
+        <section
+          className="rise rounded-[10px] bg-ink text-paper px-6 py-9 sm:px-10 sm:py-12"
+          style={{ "--i": 2 }}
+        >
+          <div className="grid lg:grid-cols-12 gap-8 items-end">
+            <div className="lg:col-span-8">
+              <p className="text-[14px] text-paper/60">Your teacher's note for this week</p>
+              <h2 className="mt-3 font-serif text-[30px] sm:text-[38px] leading-[1.05] tracking-[-0.02em] font-medium">
+                {user.currentFocus.title.charAt(0).toUpperCase() + user.currentFocus.title.slice(1)}
+              </h2>
+              <blockquote className="mt-5 font-serif italic text-[20px] sm:text-[22px] leading-[1.4] text-paper/85 max-w-[34ch] sm:max-w-[46ch]">
+                &ldquo;{user.currentFocus.description}&rdquo;
+              </blockquote>
+            </div>
+            <div className="lg:col-span-4 lg:pl-6 space-y-5">
+              <p className="text-[15px] text-paper/75">
+                <span className="text-paper">Today's drill:</span> a 150-word explanation with no passive voice.
+              </p>
+              <Link to="/revision-mode" className="btn btn-pen h-11 px-5 w-full sm:w-auto">
+                <span>Start the precision drill</span>
+                <ArrowRight size={16} weight="bold" />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+          {/* Skill profile */}
+          <section className="lg:col-span-7 sheet p-6 sm:p-8 rise" style={{ "--i": 3 }}>
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <h2 className="font-serif text-[26px] leading-tight tracking-[-0.015em] font-medium">
+                  How your writing scores
+                </h2>
+                <p className="mt-1 text-[14px] text-ink-3">Out of 100, with the change over six weeks</p>
               </div>
+              <Link to="/progress" className="link text-[14px] shrink-0">
+                Full progress
+              </Link>
             </div>
 
-            {/* Right 6 cols: Active Writing Expeditions */}
-            <div className="lg:col-span-6 space-y-4">
-              {/* Active Book Rewrite Card */}
-              <div className="bg-white p-5 rounded-2xl border border-[#E4DDD1] shadow-2xs hover:border-[#D5CDC0] transition-all flex items-start gap-4">
+            <ul className="mt-8 space-y-5">
+              {skills.map((skill, idx) => (
+                <li key={skill.id}>
+                  <div className="flex items-baseline justify-between gap-3 text-[14.5px]">
+                    <span className={skill.focus ? "font-medium text-ink" : "text-ink"}>
+                      {skill.name}
+                      {skill.focus && <span className="ml-2 text-[13px] text-pen">This week's focus</span>}
+                    </span>
+                    <span className="tabular flex items-baseline gap-3">
+                      <span className="text-[13px] text-good">{skill.change}</span>
+                      <span className="font-medium w-7 text-right">{skill.score}</span>
+                    </span>
+                  </div>
+                  <div className="mt-2 h-1.5 rounded-full bg-tint overflow-hidden">
+                    <div
+                      className={`h-full rounded-full grow-x ${skill.focus ? "bg-pen" : "bg-ink"}`}
+                      style={{ width: `${skill.score}%`, "--i": idx }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {focusSkill && (
+              <p className="mt-8 text-[14px] text-ink-2">
+                {focusSkill.name} rose {focusSkill.change.replace("+", "")} in six weeks, enough to meet the Level IV
+                benchmark.
+              </p>
+            )}
+          </section>
+
+          {/* What is on the desk */}
+          <div className="lg:col-span-5 flex flex-col gap-6 lg:gap-8">
+            <section className="sheet p-6 sm:p-7 rise" style={{ "--i": 4 }}>
+              <div className="flex gap-5">
                 <img
                   src={bookSession.coverUrl || "/book-cover.jpg"}
-                  alt={bookSession.bookTitle}
-                  className="w-20 h-28 object-cover rounded-lg border border-[#DDD6C9] shadow-xs shrink-0"
+                  alt={`Cover of ${bookSession.bookTitle}`}
+                  className="w-24 h-36 object-cover rounded-[4px] shrink-0"
                 />
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#FAF0E6] text-[#B85D38]">
-                      Active Book Session
-                    </span>
-                    <span className="text-xs text-[#7A7E8B]">
-                      Page {bookSession.currentPage} of {bookSession.totalPages}
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className="font-serif font-bold text-base text-[#1A1A1E]">
-                      {bookSession.bookTitle}
-                    </h4>
-                    <p className="text-xs text-[#6B6F7B]">by {bookSession.author}</p>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-[#52555F]">
-                    <span>Rewritten: <strong>{bookSession.wordsRewritten.toLocaleString()} w</strong></span>
-                    <span>•</span>
-                    <span>Vocab: <strong>{bookSession.sessionVocabulary.length} words</strong></span>
-                  </div>
-                  <div className="pt-1">
-                    <Link
-                      to="/book-session"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1F2E3D] hover:text-[#B85D38] transition-colors"
-                    >
-                      <span>Continue Rewriting in Split Screen</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
+                <div className="min-w-0 flex flex-col">
+                  <p className="text-[13px] text-ink-3 tabular">
+                    Page {bookSession.currentPage} of {bookSession.totalPages}
+                  </p>
+                  <h3 className="mt-1 font-serif text-[21px] leading-[1.15] font-medium">{bookSession.bookTitle}</h3>
+                  <p className="mt-1 text-[14px] text-ink-2">by {bookSession.author}</p>
+                  <p className="mt-auto pt-3 text-[13.5px] text-ink-2 tabular">
+                    {bookSession.wordsRewritten.toLocaleString()} words rewritten, {bookSession.sessionVocabulary.length} new
+                    words
+                  </p>
                 </div>
               </div>
-
-              {/* Weekly Challenge Card */}
-              <div className="bg-white p-5 rounded-2xl border border-[#E4DDD1] shadow-2xs hover:border-[#D5CDC0] transition-all flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A] flex items-center justify-center shrink-0">
-                  <Trophy className="w-6 h-6" />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#FEF3C7] text-[#92400E]">
-                      Weekly Challenge
-                    </span>
-                    <span className="text-xs font-semibold text-[#D97706]">
-                      Due in 2 days
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className="font-serif font-bold text-base text-[#1A1A1E]">
-                      "{challenges.theme}"
-                    </h4>
-                    <p className="text-xs text-[#6B6F7B]">
-                      Write 300–500 words using at least 8 of your 12 weekly vocabulary words.
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-xs text-[#52555F]">
-                      Target Vocabulary: <strong>10 / 12 words ready</strong>
-                    </span>
-                    <Link
-                      to="/challenges"
-                      className="inline-flex items-center gap-1 text-xs font-bold text-[#1F2E3D] hover:underline"
-                    >
-                      <span>Open Challenge</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Writing Activity */}
-          <div className="bg-white p-6 rounded-2xl border border-[#E4DDD1] shadow-2xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-serif font-bold text-lg text-[#1A1A1E]">
-                  Recent Writing Activity
-                </h3>
-                <p className="text-xs text-[#6B6F7B]">
-                  Your practice sessions, book rewrites, and deliberate revisions
-                </p>
-              </div>
-              <span className="text-xs text-[#7A7E8B]">
-                Last 7 days
-              </span>
-            </div>
-
-            <div className="divide-y divide-[#F0EBE0]">
-              {recentActivity.map((activity) => (
+              <div className="mt-5 h-1 rounded-full bg-tint overflow-hidden">
                 <div
-                  key={activity.id}
-                  className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#FAF8F5] -mx-2 px-2 rounded-lg transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#FAF0E6] text-[#B85D38] flex items-center justify-center shrink-0">
-                      {activity.type === "Book Session" ? (
-                        <BookOpen className="w-4 h-4" />
-                      ) : activity.type === "Weekly Challenge" ? (
-                        <Trophy className="w-4 h-4" />
-                      ) : (
-                        <PenTool className="w-4 h-4" />
-                      )}
-                    </div>
-                    <div>
-                      <div className="font-serif font-semibold text-xs text-[#1A1A1E]">
-                        {activity.title}
-                      </div>
-                      <div className="text-[11px] text-[#7A7E8B] flex items-center gap-2 mt-0.5">
-                        <span>{activity.timestamp}</span>
-                        <span>•</span>
-                        <span>{activity.wordCount} words</span>
-                        <span>•</span>
-                        <span>{activity.duration}</span>
-                      </div>
-                    </div>
-                  </div>
+                  className="h-full bg-ink rounded-full grow-x"
+                  style={{ width: `${(bookSession.currentPage / bookSession.totalPages) * 100}%` }}
+                />
+              </div>
+              <Link to="/book-session" className="btn btn-quiet w-full mt-5">
+                <span>Continue rewriting</span>
+                <ArrowRight size={16} />
+              </Link>
+            </section>
 
-                  <div className="flex items-center gap-3">
-                    <span className="text-[11px] px-2.5 py-1 rounded-full bg-[#F4EFE6] text-[#4A4D55] font-medium border border-[#E5DFD4]">
-                      {activity.status}
-                    </span>
-                    <button
-                      onClick={() => {
-                        if (activity.type === "Book Session") navigate("/book-session");
-                        else if (activity.type === "Weekly Challenge") navigate("/challenges");
-                        else navigate("/write");
-                      }}
-                      className="text-xs font-semibold text-[#1F2E3D] hover:underline cursor-pointer"
-                    >
-                      Review
-                    </button>
-                  </div>
+            <section className="sheet p-6 sm:p-7 rise flex-1" style={{ "--i": 5 }}>
+              <div className="flex items-center justify-between gap-3 text-[13px]">
+                <span className="text-ink-3">Weekly challenge</span>
+                <span className="text-warn font-medium">Due in 2 days</span>
+              </div>
+              <h3 className="mt-3 font-serif text-[22px] leading-[1.2] font-medium">&ldquo;{challenges.theme}&rdquo;</h3>
+              <p className="mt-2 text-[14px] text-ink-2">
+                Write 300 to 500 words using at least {challenges.targetCount} of your {challenges.words.length} words.
+              </p>
+              <div className="mt-5 flex items-end justify-between gap-4">
+                <div>
+                  <span className="font-serif text-[34px] leading-none tabular">10</span>
+                  <span className="text-[14px] text-ink-2"> of {challenges.words.length} words ready</span>
                 </div>
-              ))}
-            </div>
+                <Link to="/challenges" className="link text-[14px]">
+                  Open
+                </Link>
+              </div>
+            </section>
           </div>
         </div>
-      )}
+
+        {/* Recent writing */}
+        <section className="sheet p-6 sm:p-8 rise" style={{ "--i": 6 }}>
+          <div className="flex items-end justify-between gap-4">
+            <h2 className="font-serif text-[26px] leading-tight tracking-[-0.015em] font-medium">Recent writing</h2>
+            <span className="text-[13px] text-ink-3">Last 7 days</span>
+          </div>
+
+          <ul className="mt-5 -mx-3">
+            {recentActivity.map((activity) => {
+              const Icon = activityIcon[activity.type] || PenNib;
+              const route = activityRoute[activity.type] || "/write";
+              return (
+                <li key={activity.id}>
+                  <button
+                    onClick={() => navigate(route)}
+                    className="w-full text-left px-3 py-4 rounded-md hover:bg-paper transition-colors flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 group"
+                  >
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      <Icon size={20} className="text-ink-3 mt-0.5 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="font-serif text-[18px] leading-snug">{activity.title}</div>
+                        <div className="mt-0.5 text-[13px] text-ink-3 tabular">
+                          {activity.timestamp} · {activity.wordCount.toLocaleString()} words · {activity.duration}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 pl-9 sm:pl-0 shrink-0">
+                      <span className={`tag ${activity.status === "Active Session" ? "tag-pen" : ""}`}>
+                        {activity.status === "Active Session" ? "In progress" : activity.status}
+                      </span>
+                      <ArrowRight
+                        size={16}
+                        className="text-ink-3 transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      </div>
     </AppLayout>
   );
 }
