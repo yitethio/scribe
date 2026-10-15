@@ -1,231 +1,142 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import {
-  TrendingUp,
-  Award,
-  AlertTriangle,
-  Sparkles,
-  BarChart2,
-  Calendar,
-  CheckCircle2,
-  ArrowRight,
-  Flame,
-  Layers,
-  BookOpen
-} from "lucide-react";
+import { ArrowRight } from "@phosphor-icons/react";
 import { useScribe } from "../store/scribeContext";
-import { AppLayout } from "../components/layout/AppLayout";
+import { AppLayout, pageClass } from "../components/layout/AppLayout";
+
+const vocabularyBreakdown = [
+  { value: 147, label: "Words learned", note: "12 more this week", tone: "text-ink", noteTone: "text-good" },
+  { value: 83, label: "Used well", note: "In natural phrases", tone: "text-ink", noteTone: "text-ink-3" },
+  { value: 21, label: "Need another look", note: "Booked for spaced practice", tone: "text-warn", noteTone: "text-ink-3" },
+  { value: 11, label: "Often misused", note: "Usually the wrong partner word", tone: "text-pen", noteTone: "text-ink-3" }
+];
+
+const heatShades = ["bg-tint", "bg-tint-2", "bg-[#9a9da3]", "bg-ink"];
+const heatLevel = (i) => (i % 4 === 0 ? 3 : i % 3 === 0 ? 2 : i % 2 === 0 ? 1 : 0);
 
 export default function Progress() {
   const { state } = useScribe();
-  const { user, skills, vocabulary } = state;
+  const { skills } = state;
 
   return (
     <AppLayout
-      title="Writing Progress & Diagnostics"
-      subtitle="Longitudinal skill trajectories, retention diagnostics & pattern detection"
+      title="Progress"
+      subtitle="How your writing has changed over the weeks, which words have stuck, and the habit behind it."
     >
-      <div className="p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-150">
-        {/* Top Diagnostic Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Vocabulary Acquisition Health */}
-          <div className="bg-white p-6 rounded-2xl border border-[#E4DDD1] shadow-2xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A8D96]">
-                  Lexical Growth
-                </span>
-                <h3 className="font-serif font-bold text-lg text-[#1A1A1E]">
-                  Vocabulary Breakdown
-                </h3>
-              </div>
-              <span className="font-mono text-sm font-bold text-[#059669]">
-                71% Retention
-              </span>
+      <div className={`${pageClass} space-y-6 lg:space-y-8`}>
+        {/* The headline trend */}
+        <section className="sheet p-6 sm:p-10 rise">
+          <div className="grid lg:grid-cols-12 gap-8 items-end">
+            <div className="lg:col-span-7">
+              <h2 className="font-serif text-[30px] sm:text-[36px] leading-[1.08] tracking-[-0.02em] font-medium">
+                Cohesion is up 14 points in six weeks
+              </h2>
+              <p className="mt-3 text-[16px] text-ink-2 max-w-[52ch]">
+                Practice in the revision lab and your book rewrites has cleared out most of the weak links between
+                paragraphs.
+              </p>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3.5 bg-[#FAF8F5] rounded-xl border border-[#EDE7DC]">
-                <div className="text-[11px] text-[#7A7E8B]">Total Learned</div>
-                <div className="font-serif font-bold text-2xl text-[#1A1A1E]">
-                  147
-                </div>
-                <div className="text-[10px] text-[#059669] font-medium mt-0.5">
-                  +12 this week
-                </div>
+            <div className="lg:col-span-5 flex items-end gap-6 sm:gap-10">
+              <div>
+                <div className="font-serif text-[48px] sm:text-[56px] leading-none tracking-[-0.03em] text-ink-3 tabular">47</div>
+                <div className="mt-2 text-[13px] text-ink-3">Week 36</div>
               </div>
-
-              <div className="p-3.5 bg-[#FAF8F5] rounded-xl border border-[#EDE7DC]">
-                <div className="text-[11px] text-[#7A7E8B]">Successfully Used</div>
-                <div className="font-serif font-bold text-2xl text-[#1F2E3D]">
-                  83
-                </div>
-                <div className="text-[10px] text-[#059669] font-medium mt-0.5">
-                  Natural collocations
-                </div>
-              </div>
-
-              <div className="p-3.5 bg-[#FAF8F5] rounded-xl border border-[#EDE7DC]">
-                <div className="text-[11px] text-[#7A7E8B]">Needs Reinforcement</div>
-                <div className="font-serif font-bold text-2xl text-[#D97706]">
-                  21
-                </div>
-                <div className="text-[10px] text-[#D97706] font-medium mt-0.5">
-                  Scheduled for spaced drill
-                </div>
-              </div>
-
-              <div className="p-3.5 bg-[#FAF8F5] rounded-xl border border-[#EDE7DC]">
-                <div className="text-[11px] text-[#7A7E8B]">Repeatedly Misused</div>
-                <div className="font-serif font-bold text-2xl text-[#B85D38]">
-                  11
-                </div>
-                <div className="text-[10px] text-[#B85D38] font-medium mt-0.5">
-                  Collocation collisions
-                </div>
+              <ArrowRight size={24} className="text-ink-3 mb-8" aria-hidden="true" />
+              <div>
+                <div className="font-serif text-[72px] sm:text-[88px] leading-none tracking-[-0.03em] text-good tabular">61</div>
+                <div className="mt-2 text-[13px] text-ink-2">Now, out of 100</div>
               </div>
             </div>
           </div>
+        </section>
 
-          {/* Skill Diagnostic Bars */}
-          <div className="bg-white p-6 rounded-2xl border border-[#E4DDD1] shadow-2xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A8D96]">
-                  Editorial Calibration
-                </span>
-                <h3 className="font-serif font-bold text-lg text-[#1A1A1E]">
-                  Core Writing Dimensions
-                </h3>
-              </div>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#FAF0E6] text-[#B85D38] font-bold">
-                Level IV Benchmark
-              </span>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+          <section className="sheet p-6 sm:p-8 rise" style={{ "--i": 1 }}>
+            <div className="flex items-baseline justify-between gap-4">
+              <h2 className="font-serif text-[24px] font-medium">Your vocabulary</h2>
+              <span className="text-[14px] text-good">71% remembered</span>
             </div>
-
-            <div className="space-y-3 pt-1">
-              {skills.map((skill) => (
-                <div key={skill.id} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-[#1A1A1E]">{skill.name}</span>
-                    <span className="font-mono font-bold text-[#1A1A1E]">{skill.score}/100</span>
-                  </div>
-                  <div className="h-2 w-full bg-[#F2EDE4] rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700 ${
-                        skill.focus ? "bg-[#B85D38]" : "bg-[#1F2E3D]"
-                      }`}
-                      style={{ width: `${skill.score}%` }}
-                    />
-                  </div>
+            <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-8">
+              {vocabularyBreakdown.map((item) => (
+                <div key={item.label}>
+                  <div className={`font-serif text-[44px] leading-none tracking-[-0.02em] tabular ${item.tone}`}>{item.value}</div>
+                  <div className="mt-2 text-[14px] font-medium">{item.label}</div>
+                  <div className={`text-[13px] ${item.noteTone}`}>{item.note}</div>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
+
+          <section className="sheet p-6 sm:p-8 rise" style={{ "--i": 2 }}>
+            <div className="flex items-baseline justify-between gap-4">
+              <h2 className="font-serif text-[24px] font-medium">Core skills</h2>
+              <span className="tag">Level IV benchmark</span>
+            </div>
+            <ul className="mt-7 space-y-4">
+              {skills.map((skill, idx) => (
+                <li key={skill.id}>
+                  <div className="flex items-baseline justify-between text-[14.5px]">
+                    <span className={skill.focus ? "font-medium" : ""}>{skill.name}</span>
+                    <span className="tabular font-medium">{skill.score}</span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 rounded-full bg-tint overflow-hidden">
+                    <div
+                      className={`h-full rounded-full grow-x ${skill.focus ? "bg-pen" : "bg-ink"}`}
+                      style={{ width: `${skill.score}%`, "--i": idx }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
         </div>
 
-        {/* Longitudinal Improvement Callout */}
-        <div className="p-6 bg-white border border-[#E4DDD1] rounded-2xl shadow-2xs flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#059669]">
-              Longitudinal Trend
-            </span>
-            <h3 className="font-serif font-bold text-xl text-[#1A1A1E]">
-              Your cohesion score improved 14% over the last 6 weeks
-            </h3>
-            <p className="text-xs text-[#6B6F7B]">
-              Consistent practice in Revision Mode and Book Rewrite sessions has eliminated weak paragraph transitions.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#EDE7DC] text-center">
-              <div className="text-[10px] text-[#7A7E8B]">Week 36</div>
-              <div className="font-serif font-bold text-sm text-[#6B6F7B]">47 / 100</div>
-            </div>
-            <ArrowRight className="w-4 h-4 text-[#8A8D96]" />
-            <div className="p-3 bg-[#ECFDF5] rounded-xl border border-[#A7F3D0] text-center">
-              <div className="text-[10px] text-[#065F46]">Current</div>
-              <div className="font-serif font-bold text-base text-[#065F46]">61 / 100</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Pattern Detection Intelligence */}
-        <div className="bg-[#FAF7F0] p-6 rounded-2xl border border-[#E8E1D3] shadow-2xs space-y-4">
-          <div className="flex items-center gap-2">
-            <span className="p-1 rounded-md bg-[#FAF0E6] text-[#B85D38]">
-              <Sparkles className="w-4 h-4" />
-            </span>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#B85D38]">
-                AI Cognitive Diagnostic
-              </span>
-              <h3 className="font-serif font-bold text-lg text-[#1A1A1E]">
-                Pattern Detected in Your Prose
-              </h3>
-            </div>
-          </div>
-
-          <blockquote className="p-4 bg-white rounded-xl border border-[#E2DBD0] font-serif text-sm text-[#252830] italic leading-relaxed">
-            "You frequently use advanced vocabulary correctly in isolation, but sometimes reach for terms that are more complicated than necessary, creating dense syntactic clusters."
+        {/* Pattern the coach noticed */}
+        <section className="rounded-[10px] bg-ink text-paper p-6 sm:p-10 rise" style={{ "--i": 3 }}>
+          <p className="text-[14px] text-paper/60">A pattern in your prose</p>
+          <blockquote className="mt-4 font-serif italic text-[22px] sm:text-[26px] leading-[1.4] max-w-[52ch]">
+            &ldquo;You use advanced words correctly on their own, but sometimes reach for a harder word than the
+            sentence needs, and the sentences grow dense.&rdquo;
           </blockquote>
-
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+          <div className="mt-8 flex flex-col sm:flex-row sm:items-end justify-between gap-5">
             <div>
-              <div className="text-xs font-bold text-[#1A1A1E]">
-                Recommended Focus: Precision and Simplicity
-              </div>
-              <p className="text-[11px] text-[#6B6F7B]">
-                Practice replacing Latinate multisyllable words with vigorous, direct Anglo-Saxon verbs.
+              <div className="text-[15px] font-medium">Focus next on precision and simplicity</div>
+              <p className="mt-1 text-[14px] text-paper/70 max-w-[56ch]">
+                Swap long Latin-rooted words for short, direct verbs.
               </p>
             </div>
-
-            <Link
-              to="/revision-mode"
-              className="px-4 py-2 bg-[#1F2E3D] hover:bg-[#15202B] text-white text-xs font-semibold rounded-xl shrink-0 cursor-pointer shadow-2xs"
-            >
-              Start Targeted Exercises
+            <Link to="/revision-mode" className="btn btn-pen h-11 px-5 shrink-0">
+              <span>Start the exercises</span>
+              <ArrowRight size={16} weight="bold" />
             </Link>
           </div>
-        </div>
+        </section>
 
-        {/* 30-Day Writing Habit Heatmap */}
-        <div className="bg-white p-6 rounded-2xl border border-[#E4DDD1] shadow-2xs space-y-4">
-          <div className="flex items-center justify-between">
+        {/* Habit */}
+        <section className="sheet p-6 sm:p-8 rise" style={{ "--i": 4 }}>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h3 className="font-serif font-bold text-base text-[#1A1A1E]">
-                Writing Consistency Heatmap
-              </h3>
-              <p className="text-xs text-[#7A7E8B]">
-                Daily deliberate sessions logged over the past 30 days
-              </p>
+              <h2 className="font-serif text-[24px] font-medium">The last 30 days</h2>
+              <p className="mt-1 text-[14px] text-ink-3">One square per day, darker for more writing</p>
             </div>
-            <div className="flex items-center gap-2 text-xs text-[#6B6F7B]">
+            <div className="flex items-center gap-2 text-[13px] text-ink-3" aria-hidden="true">
               <span>Less</span>
-              <div className="flex gap-1">
-                <span className="w-3 h-3 rounded-xs bg-[#F0EAE0]" />
-                <span className="w-3 h-3 rounded-xs bg-[#D5CDC0]" />
-                <span className="w-3 h-3 rounded-xs bg-[#B85D38]" />
-                <span className="w-3 h-3 rounded-xs bg-[#1F2E3D]" />
-              </div>
+              {heatShades.map((shade) => (
+                <span key={shade} className={`w-3.5 h-3.5 rounded-[3px] ${shade}`} />
+              ))}
               <span>More</span>
             </div>
           </div>
-
-          <div className="grid grid-cols-10 sm:grid-cols-15 gap-2 pt-2">
-            {Array.from({ length: 30 }).map((_, i) => {
-              const intensity = i % 4 === 0 ? "bg-[#1F2E3D]" : i % 3 === 0 ? "bg-[#B85D38]" : i % 2 === 0 ? "bg-[#D5CDC0]" : "bg-[#F0EAE0]";
-              return (
-                <div
-                  key={i}
-                  className={`h-6 rounded-md ${intensity} transition-all hover:scale-110 cursor-pointer`}
-                  title={`Day ${i + 1}: ${i % 2 === 0 ? "Active writing session logged" : "Rest"}`}
-                />
-              );
-            })}
+          <div className="mt-6 grid grid-cols-10 sm:grid-cols-15 gap-1.5 sm:gap-2">
+            {Array.from({ length: 30 }).map((_, i) => (
+              <div
+                key={i}
+                className={`aspect-square rounded-[4px] ${heatShades[heatLevel(i)]} transition-transform hover:scale-110`}
+                title={`Day ${i + 1}: ${i % 2 === 0 ? "wrote" : "rest day"}`}
+              />
+            ))}
           </div>
-        </div>
+        </section>
       </div>
     </AppLayout>
   );
