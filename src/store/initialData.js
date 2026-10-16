@@ -24,10 +24,10 @@ export const initialScribeData = {
   skills: [
     { id: "vocab", name: "Vocabulary", score: 72, change: "+8%", focus: false },
     { id: "grammar", name: "Grammar", score: 68, change: "+4%", focus: false },
-    { id: "clarity", name: "Clarity", score: 74, change: "+12%", focus: false },
-    { id: "cohesion", name: "Cohesion", score: 61, change: "+14%", focus: true },
-    { id: "sentenceStructure", name: "Sentence Structure", score: 69, change: "+5%", focus: false },
-    { id: "wordChoice", name: "Word Choice", score: 75, change: "+9%", focus: false }
+    { id: "clarity", name: "Clarity", score: 74, change: "+12%", focus: true },
+    { id: "cohesion", name: "Cohesion", score: 61, change: "+14%", focus: false },
+    { id: "sentenceStructure", name: "Sentence structure", score: 69, change: "+5%", focus: false },
+    { id: "wordChoice", name: "Word choice", score: 75, change: "+9%", focus: false }
   ],
 
   vocabulary: [
