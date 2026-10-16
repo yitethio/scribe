@@ -35,29 +35,33 @@ export default function Challenges() {
 
   return (
     <AppLayout
+      eyebrow="Weekly challenge"
       title={`“${challenges.theme}”`}
       subtitle={`This week's challenge: an original passage on this theme that uses at least ${challenges.targetCount} of the ${challenges.learnedWordsCount} words you saved this week.`}
     >
       <div className={`${pageClass} space-y-6 lg:space-y-8`}>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[14px] text-ink-2 rise">
-          <span className="flex items-center gap-1.5 text-warn font-medium">
-            <Clock size={16} />
+        <div className="flex flex-wrap items-center gap-2 rise">
+          <span className="tag tag-warn">
+            <Clock size={13} weight="bold" />
             Due {challenges.deadline}
           </span>
-          <span>300 to 500 words</span>
-          <span>At least {challenges.targetCount} target words</span>
+          <span className="chip">300 to 500 words</span>
+          <span className="chip">At least {challenges.targetCount} target words</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-          <form onSubmit={handleSubmit} className="lg:col-span-8 sheet p-6 sm:p-8 flex flex-col rise" style={{ "--i": 1 }}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <form onSubmit={handleSubmit} className="lg:col-span-8 card p-6 sm:p-8 flex flex-col rise" style={{ "--i": 1 }}>
             <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <label htmlFor="challenge-passage" className="font-serif text-[22px] font-medium">
-                Your passage
-              </label>
-              <div className="flex items-baseline gap-4 text-[14px] tabular">
-                <span className={lengthOk ? "text-good" : "text-ink-2"}>{wordCount} words</span>
-                <span className={isGoalMet ? "text-good" : "text-pen"}>
-                  {usedCount} words used, {challenges.targetCount} needed
+              <div>
+                <span className="eyebrow">Draft</span>
+                <label htmlFor="challenge-passage" className="block mt-1 font-serif text-[28px] leading-tight tracking-[-0.015em]">
+                  Your passage
+                </label>
+              </div>
+              <div className="flex items-center gap-2 tabular">
+                <span className={`tag tag-dot ${lengthOk ? "tag-good" : ""}`}>{wordCount} words</span>
+                <span className={`tag tag-dot ${isGoalMet ? "tag-good" : "tag-pen"}`}>
+                  {usedCount} of {challenges.targetCount} words used
                 </span>
               </div>
             </div>
@@ -71,43 +75,52 @@ export default function Challenges() {
                 if (analyzed) setAnalyzed(false);
               }}
               placeholder="Write your passage here. Think about how the sentences flow, and put each word where it belongs."
-              className="mt-5 w-full p-5 bg-paper rounded-lg font-serif text-[18px] leading-[1.75] text-ink placeholder:text-ink-3/70 outline-none focus:bg-[#efefeb] transition-colors resize-y"
+              className="mt-5 w-full p-5 bg-inset border border-edge rounded-xl font-serif text-[18px] leading-[1.75] text-ink placeholder:text-ink-3/70 outline-none focus:border-ink focus:bg-sheet transition-colors resize-y"
             />
 
             <div className="mt-5 flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-4">
               <p className="text-[13px] text-ink-3">Scribe never writes or rewrites your sentences.</p>
-              <button type="submit" disabled={wordCount < 50} className="btn btn-primary h-11 px-5">
+              <button type="submit" disabled={wordCount < 50} className="btn btn-primary">
                 <PaperPlaneTilt size={16} />
                 <span>Submit for feedback</span>
               </button>
             </div>
           </form>
 
-          <aside className="lg:col-span-4 rise" style={{ "--i": 2 }} aria-label="Target words">
-            <div className="flex items-baseline justify-between">
-              <h2 className="font-serif text-[22px] font-medium">This week's words</h2>
-              <span className="text-[14px] tabular text-ink-2">
-                {usedCount} of {challenges.words.length}
-              </span>
+          <aside className="lg:col-span-4 card p-6 flex flex-col gap-5 rise" style={{ "--i": 2 }} aria-label="Target words">
+            <div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="eyebrow">This week's words</span>
+                <span className="text-[13px] tabular text-ink-3">
+                  <span className="font-semibold text-ink">
+                    {usedCount} of {challenges.words.length}
+                  </span>{" "}
+                  · {challenges.targetCount} needed
+                </span>
+              </div>
+              <div className="mt-3 flex gap-1" aria-hidden="true">
+                {usedWordsStatus.map(({ word, isUsed }) => (
+                  <span key={word} className={`h-[5px] flex-1 rounded-full transition-colors ${isUsed ? "bg-good" : "bg-tint-2"}`} />
+                ))}
+              </div>
             </div>
-            <p className="mt-1 text-[14px] text-ink-3">They light up as you use them.</p>
 
-            <ul className="mt-5 flex flex-wrap gap-2">
+            <ul className="flex flex-wrap gap-2">
               {usedWordsStatus.map(({ word, isUsed }) => (
                 <li
                   key={word}
-                  className={`h-9 px-3 rounded-md flex items-center gap-1.5 font-serif text-[16px] transition-colors ${
-                    isUsed ? "bg-ink text-paper" : "bg-sheet text-ink-2"
+                  className={`h-8 px-3 rounded-full border flex items-center gap-1.5 font-serif text-[15.5px] transition-colors ${
+                    isUsed ? "bg-good-soft border-transparent text-good" : "border-line text-ink-2"
                   }`}
                 >
-                  {isUsed && <Check size={13} weight="bold" className="text-[#e8a090]" />}
+                  {isUsed && <Check size={12} weight="bold" />}
                   {word}
                   <span className="sr-only">{isUsed ? "(used)" : "(not used yet)"}</span>
                 </li>
               ))}
             </ul>
 
-            <p className="mt-6 text-[14px] text-ink-2 leading-relaxed">
+            <p className="mt-auto pt-4 border-t border-rule text-[14px] text-ink-2 leading-relaxed">
               Aim for sentences that sound natural, not clever. A plain word is better than a grand one in the wrong
               place.
             </p>
@@ -115,28 +128,29 @@ export default function Challenges() {
         </div>
 
         {analyzed && (
-          <section className="sheet p-6 sm:p-8 pop" aria-labelledby="rubric-title">
+          <section className="card p-6 sm:p-8 pop" aria-labelledby="rubric-title">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
-                <h2 id="rubric-title" className="font-serif text-[26px] font-medium">
+                <span className="eyebrow">Teacher's feedback</span>
+                <h2 id="rubric-title" className="mt-1 font-serif text-[28px] leading-tight tracking-[-0.015em]">
                   How you used each word
                 </h2>
                 <p className="mt-1 text-[14px] text-ink-3">Choose a word to read the teacher's note.</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="tag tag-good">8 of 8 target met</span>
-                <span className="tag">92% retention</span>
+                <span className="tag tag-dot tag-good">8 of 8 target met</span>
+                <span className="tag tag-dot tag-info">92% retention</span>
               </div>
             </div>
 
             <div className="mt-6 overflow-x-auto -mx-2">
               <table className="w-full text-left text-[14px] min-w-[640px]">
                 <thead>
-                  <tr className="text-[13px] text-ink-3">
-                    <th className="font-normal py-3 px-2">Word</th>
-                    <th className="font-normal py-3 px-2">Grammar</th>
-                    <th className="font-normal py-3 px-2">Sounds</th>
-                    <th className="font-normal py-3 px-2">Teacher's note</th>
+                  <tr className="eyebrow text-[11px]">
+                    <th className="font-semibold py-3 px-2">Word</th>
+                    <th className="font-semibold py-3 px-2">Grammar</th>
+                    <th className="font-semibold py-3 px-2">Sounds</th>
+                    <th className="font-semibold py-3 px-2">Teacher's note</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -146,20 +160,20 @@ export default function Challenges() {
                       <tr
                         key={idx}
                         onClick={() => setSelectedWordNote(item)}
-                        className={`border-t border-tint cursor-pointer transition-colors ${
-                          selectedWordNote?.word === item.word ? "bg-paper" : "hover:bg-paper"
+                        className={`border-t border-rule cursor-pointer transition-colors ${
+                          selectedWordNote?.word === item.word ? "bg-inset" : "hover:bg-[#f6f3ec]"
                         }`}
                       >
                         <td className="py-3.5 px-2 font-serif text-[17px]">{item.word}</td>
                         <td className="py-3.5 px-2">
                           {item.correct ? (
-                            <span className="flex items-center gap-1.5 text-good">
-                              <Check size={15} weight="bold" />
+                            <span className="tag tag-good">
+                              <Check size={12} weight="bold" />
                               Correct
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1.5 text-pen">
-                              <X size={15} weight="bold" />
+                            <span className="tag tag-pen">
+                              <X size={12} weight="bold" />
                               Incorrect
                             </span>
                           )}
@@ -179,14 +193,15 @@ export default function Challenges() {
             </div>
 
             {selectedWordNote && (
-              <div className="mt-6 rounded-lg bg-ink text-paper p-5 flex items-start justify-between gap-4 fade">
+              <div className="mt-6 panel-dark p-5 sm:p-6 flex items-start justify-between gap-4 fade">
                 <div>
-                  <div className="font-serif text-[20px]">&ldquo;{selectedWordNote.word}&rdquo;</div>
-                  <p className="mt-1 text-[15px] text-paper/80 leading-relaxed">{selectedWordNote.note}</p>
+                  <div className="eyebrow text-night-mute">Teacher's note</div>
+                  <div className="mt-2 font-serif text-[22px]">&ldquo;{selectedWordNote.word}&rdquo;</div>
+                  <p className="mt-1 text-[15px] text-night-soft leading-relaxed">{selectedWordNote.note}</p>
                 </div>
                 <button
                   onClick={() => setSelectedWordNote(null)}
-                  className="btn btn-icon text-paper/70 hover:text-paper hover:bg-white/10 shrink-0"
+                  className="btn btn-icon text-night-mute hover:text-night-text hover:bg-white/10 shrink-0"
                   aria-label="Close note"
                 >
                   <X size={16} />
