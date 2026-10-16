@@ -60,7 +60,7 @@ export default function RevisionMode() {
               Sentence {currentIndex + 1} of {revisionQueue.length}
             </span>
           </div>
-          <span className="tag tag-pen tag-caps">{currentItem.category}</span>
+          <span className="tag tag-pen tag-caps hidden sm:inline-flex">{currentItem.category}</span>
         </div>
 
         <section key={currentItem.id} className="mt-5 card p-6 sm:p-9 rise" style={{ "--i": 1 }}>

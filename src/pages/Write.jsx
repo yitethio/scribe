@@ -78,7 +78,7 @@ export default function Write() {
                 </div>
                 <button
                   onClick={() => setFontSize(nextSize[fontSize])}
-                  className="btn btn-ghost btn-sm"
+                  className="btn btn-ghost btn-sm hidden sm:inline-flex"
                   title="Change text size"
                 >
                   {sizeLabels[fontSize]}
@@ -116,7 +116,7 @@ export default function Write() {
                   defaultValue="On Deliberate Practice & Prose Architecture"
                   placeholder="Untitled"
                   aria-label="Title"
-                  className={`w-full bg-transparent border-none outline-none text-[26px] sm:text-[32px] leading-[1.15] font-normal tracking-[-0.02em] placeholder:text-ink-3/60 ${face}`}
+                  className={`w-full bg-transparent border-none outline-none text-[22px] sm:text-[32px] leading-[1.15] font-normal tracking-[-0.02em] placeholder:text-ink-3/60 ${face}`}
                 />
                 <textarea
                   value={text}

@@ -215,7 +215,7 @@ export default function BookSession() {
             </div>
           </div>
 
-          <div className="flex items-center gap-5 sm:gap-7 text-[13px] text-ink-3">
+          <div className="flex items-center gap-5 sm:gap-7 text-[13px] text-ink-3 whitespace-nowrap">
             <div>
               <div className="font-serif text-[26px] leading-none text-ink tabular">{wordsRewrittenCount.toLocaleString()}</div>
               <div className="mt-1">words rewritten</div>
@@ -224,7 +224,7 @@ export default function BookSession() {
               <div className="font-serif text-[26px] leading-none text-pen tabular">{bookSession.sessionVocabulary.length}</div>
               <div className="mt-1">new words</div>
             </div>
-            <div>
+            <div className="hidden sm:block whitespace-nowrap">
               <div className="font-serif text-[26px] leading-none text-ink tabular">{formatTimer(elapsedSeconds)}</div>
               <div className="mt-1">this session</div>
             </div>
@@ -330,7 +330,7 @@ export default function BookSession() {
                       }}
                       className="field w-14 h-8 px-1.5 py-0 text-center text-[13px] tabular"
                     />
-                    <span className="tabular">of {bookSession.totalPages}</span>
+                    <span className="tabular whitespace-nowrap">of {bookSession.totalPages}</span>
                   </label>
                   <button
                     onClick={() => handlePageChange(bookSession.currentPage + 1)}
@@ -342,7 +342,7 @@ export default function BookSession() {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-0.5">
+                <div className="hidden sm:flex items-center gap-0.5">
                   <button
                     onClick={() => setZoom((z) => Math.max(70, z - 10))}
                     className="btn btn-ghost btn-icon"
