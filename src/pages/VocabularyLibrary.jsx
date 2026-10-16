@@ -16,12 +16,9 @@ const filters = [
 
 const isMisused = (w) => w.timesUsed > 1 && w.timesUsedCorrectly / w.timesUsed < 0.6;
 
-const statusTag = (status) =>
-  status === "mastered" ? "tag-good" : status === "practicing" ? "tag-warn" : "tag-pen";
+const statusTone = { mastered: "tag-good", practicing: "tag-warn", learning: "tag-info", new: "tag-pen" };
 
-const StatusTag = ({ status }) => (
-  <span className={`tag ${statusTag(status)} capitalize`}>{status}</span>
-);
+const StatusTag = ({ status }) => <span className={`tag tag-dot ${statusTone[status] || ""} capitalize`}>{status}</span>;
 
 export default function VocabularyLibrary() {
   const { state } = useScribe();
@@ -97,7 +94,7 @@ export default function VocabularyLibrary() {
             </div>
           </div>
 
-          <div className="flex gap-1 overflow-x-auto -mx-1 px-1 pb-1 rise" style={{ "--i": 1 }} role="group" aria-label="Filter">
+          <div className="flex gap-2 overflow-x-auto -mx-1 px-1 pb-1 rise" style={{ "--i": 1 }} role="group" aria-label="Filter">
             {filters.map((f) => {
               const isActive = activeFilter === f.id;
               return (
@@ -105,12 +102,12 @@ export default function VocabularyLibrary() {
                   key={f.id}
                   onClick={() => setActiveFilter(f.id)}
                   aria-pressed={isActive}
-                  className={`h-9 px-3.5 rounded-md text-[14px] flex items-center gap-2 shrink-0 transition-colors ${
-                    isActive ? "bg-ink text-paper" : "text-ink-2 hover:bg-tint hover:text-ink"
+                  className={`h-9 px-3.5 rounded-full border text-[14px] font-medium flex items-center gap-2 shrink-0 transition-colors ${
+                    isActive ? "bg-ink border-ink text-sheet" : "bg-sheet border-edge text-ink-2 hover:border-line hover:text-ink"
                   }`}
                 >
                   <span>{f.label}</span>
-                  <span className={`tabular text-[13px] ${isActive ? "text-paper/60" : "text-ink-3"}`}>
+                  <span className={`tabular text-[12px] font-semibold ${isActive ? "text-sheet/60" : "text-ink-3"}`}>
                     {filterCounts[f.id] || 0}
                   </span>
                 </button>
@@ -119,66 +116,70 @@ export default function VocabularyLibrary() {
           </div>
 
           {filteredWords.length === 0 ? (
-            <div className="sheet px-6 py-16 text-center rise" style={{ "--i": 2 }}>
-              <Books size={34} className="mx-auto text-pen" />
-              <h2 className="mt-4 font-serif text-[24px] font-medium">No words match</h2>
+            <div className="card px-6 py-16 text-center rise" style={{ "--i": 2 }}>
+              <span className="icon-tile w-12 h-12 mx-auto text-pen">
+                <Books size={22} />
+              </span>
+              <h2 className="mt-4 font-serif text-[26px]">No words match</h2>
               <p className="mt-1 text-[15px] text-ink-2">
                 Save words from your reading, your drafts or a book session, and they will appear here.
               </p>
-              <button onClick={() => openCaptureModal()} className="btn btn-quiet mt-6">
+              <button onClick={() => openCaptureModal()} className="btn btn-outline mt-6">
                 Save a word
               </button>
             </div>
           ) : viewMode === "entries" ? (
-            <div className="sheet px-2 sm:px-4 py-3 rise" style={{ "--i": 2 }}>
-              <ul className="grid md:grid-cols-2 gap-x-4">
-                {filteredWords.map((item) => (
-                  <li key={item.id}>
+            <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(320px,100%),1fr))] gap-4 sm:gap-5">
+              {filteredWords.map((item, idx) => {
+                const accuracy = item.timesUsed ? Math.round((item.timesUsedCorrectly / item.timesUsed) * 100) : 0;
+                return (
+                  <li key={item.id} className="rise" style={{ "--i": Math.min(idx + 2, 8) }}>
                     <button
                       onClick={() => setInspectingWord(item)}
-                      className="w-full text-left rounded-lg px-4 sm:px-5 py-5 hover:bg-paper transition-colors group h-full"
+                      className="card w-full h-full text-left p-5 sm:p-6 flex flex-col gap-3 hover:border-line transition-colors group"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-baseline gap-2.5 min-w-0">
-                          <span className="font-serif text-[26px] leading-tight font-medium tracking-[-0.01em] truncate">
-                            {item.word}
-                          </span>
-                          <span className="font-serif italic text-[15px] text-ink-3">{item.pos?.toLowerCase()}</span>
-                        </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="eyebrow">{item.pos}</span>
                         <StatusTag status={item.status} />
                       </div>
-                      <p className="mt-2 font-serif text-[16.5px] leading-[1.5] text-ink line-clamp-2">{item.correctDef}</p>
+                      <span className="font-serif text-[30px] leading-none tracking-[-0.015em] truncate">{item.word}</span>
+                      <p className="font-serif text-[16.5px] leading-[1.5] text-ink-soft line-clamp-2">{item.correctDef}</p>
                       {item.personalDef && (
-                        <p className="mt-2 text-[14px] text-ink-2 line-clamp-1">
-                          <span className="text-ink-3">Mine: </span>
+                        <p className="inset px-3.5 py-2.5 text-[13.5px] text-ink-2 line-clamp-2">
+                          <span className="font-semibold text-ink">Mine: </span>
                           {item.personalDef}
                         </p>
                       )}
-                      <div className="mt-3 flex items-center justify-between text-[13px] text-ink-3">
-                        <span className="tabular">
-                          Used {item.timesUsed} {item.timesUsed === 1 ? "time" : "times"} · {item.confidence} confidence
-                        </span>
-                        <ArrowRight
-                          size={15}
-                          className="transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
-                          aria-hidden="true"
-                        />
+                      <div className="mt-auto pt-3 border-t border-rule flex flex-col gap-2">
+                        <div className="flex items-center justify-between text-[13px] text-ink-3 tabular">
+                          <span>
+                            Used {item.timesUsed} {item.timesUsed === 1 ? "time" : "times"} · {accuracy}% right
+                          </span>
+                          <ArrowRight
+                            size={15}
+                            className="transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <div className="track h-1.5">
+                          <span className={accuracy >= 80 ? "bg-good" : accuracy >= 60 ? "" : "bg-pen"} style={{ width: `${accuracy}%` }} />
+                        </div>
                       </div>
                     </button>
                   </li>
-                ))}
-              </ul>
-            </div>
+                );
+              })}
+            </ul>
           ) : (
-            <div className="sheet overflow-x-auto rise" style={{ "--i": 2 }}>
+            <div className="card overflow-x-auto rise" style={{ "--i": 2 }}>
               <table className="w-full text-left text-[14px] min-w-[720px]">
                 <thead>
-                  <tr className="text-[13px] text-ink-3">
-                    <th className="font-normal py-4 px-6">Word</th>
-                    <th className="font-normal py-4 px-4">Part of speech</th>
-                    <th className="font-normal py-4 px-4">Meaning</th>
-                    <th className="font-normal py-4 px-4">Status</th>
-                    <th className="font-normal py-4 px-4 text-right">Used</th>
+                  <tr className="eyebrow text-[11px]">
+                    <th className="font-semibold py-4 px-6">Word</th>
+                    <th className="font-semibold py-4 px-4">Part of speech</th>
+                    <th className="font-semibold py-4 px-4">Meaning</th>
+                    <th className="font-semibold py-4 px-4">Status</th>
+                    <th className="font-semibold py-4 px-4 text-right">Used</th>
                     <th className="py-4 px-6">
                       <span className="sr-only">Actions</span>
                     </th>
@@ -189,9 +190,9 @@ export default function VocabularyLibrary() {
                     <tr
                       key={item.id}
                       onClick={() => setInspectingWord(item)}
-                      className="border-t border-tint hover:bg-paper transition-colors cursor-pointer"
+                      className="border-t border-rule hover:bg-[#f6f3ec] transition-colors cursor-pointer"
                     >
-                      <td className="py-4 px-6 font-serif text-[18px]">{item.word}</td>
+                      <td className="py-4 px-6 font-serif text-[19px]">{item.word}</td>
                       <td className="py-4 px-4 text-ink-2">{item.pos}</td>
                       <td className="py-4 px-4 font-serif text-[15.5px] text-ink-2 max-w-xs truncate">{item.correctDef}</td>
                       <td className="py-4 px-4">

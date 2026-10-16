@@ -132,7 +132,8 @@ const VocabCaptureDialog = ({ onClose, initialWord = "", initialContext = "" }) 
     <Dialog onClose={onClose} labelledBy="capture-title" width="sm:max-w-xl">
       <div className="px-6 pt-6 flex items-start justify-between gap-4">
         <div>
-          <h2 id="capture-title" className="font-serif text-[28px] leading-tight font-medium">
+          <p className="eyebrow">Vocabulary</p>
+          <h2 id="capture-title" className="mt-2 font-serif text-[32px] leading-tight tracking-[-0.02em]">
             Save a word
           </h2>
           <p className="mt-1 text-[14px] text-ink-2">Define it yourself first, then check it.</p>
@@ -160,8 +161,8 @@ const VocabCaptureDialog = ({ onClose, initialWord = "", initialContext = "" }) 
         </div>
 
         {contextSentence && (
-          <div className="rounded-lg bg-paper p-4">
-            <div className="text-[13px] text-ink-3">Where you found it</div>
+          <div className="inset border border-edge p-4">
+            <div className="eyebrow">Where you found it</div>
             <p className="mt-1 font-serif italic text-[16px] leading-relaxed">&ldquo;{contextSentence}&rdquo;</p>
           </div>
         )}
@@ -202,33 +203,33 @@ const VocabCaptureDialog = ({ onClose, initialWord = "", initialContext = "" }) 
           </div>
         ) : (
           <div className="space-y-5 fade">
-            <div className="rounded-lg bg-paper p-5 space-y-4">
+            <div className="inset border border-edge p-5 space-y-4">
               <div className="flex items-baseline justify-between gap-3">
                 <div className="flex items-baseline gap-2.5">
-                  <span className="font-serif text-[24px] font-medium">{word}</span>
+                  <span className="font-serif text-[26px]">{word}</span>
                   <span className="font-serif italic text-[15px] text-ink-3">{definitionData.pos.toLowerCase()}</span>
                 </div>
-                <span className="flex items-center gap-1 text-[13px] text-good">
+                <span className="tag tag-good">
                   <CheckCircle size={15} weight="fill" />
                   <span>In the dictionary</span>
                 </span>
               </div>
               <div>
-                <div className="text-[13px] text-ink-3">Meaning</div>
+                <div className="eyebrow">Meaning</div>
                 <p className="mt-1 font-serif text-[17px] leading-relaxed">{definitionData.correctDef}</p>
               </div>
               <div>
-                <div className="text-[13px] text-ink-3">Goes with</div>
+                <div className="eyebrow">Goes with</div>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {definitionData.collocations.map((colloc, idx) => (
-                    <span key={idx} className="tag bg-sheet font-serif text-[14.5px] h-7">
+                    <span key={idx} className="chip bg-sheet font-serif text-[14.5px] text-ink">
                       {colloc}
                     </span>
                   ))}
                 </div>
               </div>
               <div>
-                <div className="text-[13px] text-ink-3">In a sentence</div>
+                <div className="eyebrow">In a sentence</div>
                 <p className="mt-1 font-serif italic text-[16px] text-ink-2">&ldquo;{definitionData.example}&rdquo;</p>
               </div>
               <p className="text-[14px] text-good">

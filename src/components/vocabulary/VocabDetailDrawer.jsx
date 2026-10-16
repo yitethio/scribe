@@ -3,10 +3,9 @@ import { X, PencilSimple } from "@phosphor-icons/react";
 import { useScribe } from "../../store";
 import { Dialog } from "../ui/Dialog";
 
-const statusTone = (status) =>
-  status === "mastered" ? "tag-good" : status === "practicing" ? "tag-warn" : "tag-pen";
+const statusTone = { mastered: "tag-good", practicing: "tag-warn", learning: "tag-info", new: "tag-pen" };
 
-const Label = ({ children }) => <div className="text-[13px] text-ink-3">{children}</div>;
+const Label = ({ children }) => <div className="eyebrow">{children}</div>;
 
 export const VocabDetailDrawer = ({ wordItem, isOpen, onClose, onStartPractice }) => {
   const { updateVocabularyWord } = useScribe();
@@ -25,16 +24,16 @@ export const VocabDetailDrawer = ({ wordItem, isOpen, onClose, onStartPractice }
 
   return (
     <Dialog variant="drawer" onClose={onClose} labelledBy="vocab-drawer-title">
-      <div className="px-6 pt-6 pb-2 flex items-start justify-between gap-4">
+      <div className="px-6 pt-6 pb-5 flex items-start justify-between gap-4 border-b border-rule">
         <div>
           <div className="flex items-baseline gap-3">
-            <h2 id="vocab-drawer-title" className="font-serif text-[36px] leading-none font-medium tracking-[-0.015em]">
+            <h2 id="vocab-drawer-title" className="font-serif text-[40px] leading-none tracking-[-0.02em]">
               {wordItem.word}
             </h2>
             <span className="font-serif italic text-[16px] text-ink-3">{wordItem.pos?.toLowerCase()}</span>
           </div>
           <div className="mt-3 flex items-center gap-2 text-[13px] text-ink-3">
-            <span className={`tag ${statusTone(wordItem.status)} capitalize`}>{wordItem.status}</span>
+            <span className={`tag tag-dot ${statusTone[wordItem.status] || ""} capitalize`}>{wordItem.status}</span>
             <span>Saved {wordItem.dateLearned}</span>
           </div>
         </div>
@@ -92,7 +91,7 @@ export const VocabDetailDrawer = ({ wordItem, isOpen, onClose, onStartPractice }
         </div>
 
         {wordItem.contextSentence && (
-          <div className="rounded-lg bg-paper p-4">
+          <div className="inset border border-edge p-4">
             <Label>Where you met it</Label>
             <p className="mt-1.5 font-serif italic text-[16px] leading-relaxed">&ldquo;{wordItem.contextSentence}&rdquo;</p>
           </div>
@@ -103,7 +102,7 @@ export const VocabDetailDrawer = ({ wordItem, isOpen, onClose, onStartPractice }
             <Label>Goes with</Label>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {wordItem.collocations.map((colloc, idx) => (
-                <span key={idx} className="tag font-serif text-[14.5px] h-7">
+                <span key={idx} className="chip font-serif text-[14.5px] text-ink">
                   {colloc}
                 </span>
               ))}
@@ -118,23 +117,23 @@ export const VocabDetailDrawer = ({ wordItem, isOpen, onClose, onStartPractice }
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-4 pt-1">
+        <div className="fact-strip [&>*]:basis-[100px]">
           <div>
-            <div className="font-serif text-[30px] leading-none tabular">{wordItem.timesUsed}</div>
-            <div className="mt-1.5 text-[13px] text-ink-3">times used</div>
+            <div className="font-serif text-[28px] leading-none tabular">{wordItem.timesUsed}</div>
+            <div className="mt-1 text-[12.5px] text-ink-3">times used</div>
           </div>
           <div>
-            <div className="font-serif text-[30px] leading-none tabular text-good">{wordItem.timesUsedCorrectly}</div>
-            <div className="mt-1.5 text-[13px] text-ink-3">used well</div>
+            <div className="font-serif text-[28px] leading-none tabular text-good">{wordItem.timesUsedCorrectly}</div>
+            <div className="mt-1 text-[12.5px] text-ink-3">used well</div>
           </div>
           <div>
-            <div className="font-serif text-[30px] leading-none tabular">{accuracy}%</div>
-            <div className="mt-1.5 text-[13px] text-ink-3">accuracy</div>
+            <div className="font-serif text-[28px] leading-none tabular">{accuracy}%</div>
+            <div className="mt-1 text-[12.5px] text-ink-3">accuracy</div>
           </div>
         </div>
       </div>
 
-      <div className="p-4 sm:px-6 flex items-center gap-3 bg-paper">
+      <div className="p-4 sm:px-6 flex items-center gap-3 border-t border-rule">
         <button onClick={onClose} className="btn btn-quiet flex-1">
           Close
         </button>

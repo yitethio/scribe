@@ -85,8 +85,8 @@ export const SpacedPracticeModal = ({ wordItem, isOpen, onClose }) => {
     <Dialog onClose={onClose} labelledBy="practice-title">
       <div className="px-6 pt-6 flex items-start justify-between gap-4">
         <div>
-          <p className="text-[13px] text-ink-3">Practice</p>
-          <h2 id="practice-title" className="mt-1 font-serif text-[32px] leading-none font-medium">
+          <p className="eyebrow">Spaced practice</p>
+          <h2 id="practice-title" className="mt-2 font-serif text-[36px] leading-none tracking-[-0.02em]">
             {currentWord}
           </h2>
         </div>
@@ -121,25 +121,25 @@ export const SpacedPracticeModal = ({ wordItem, isOpen, onClose }) => {
             <ol className="space-y-2">
               {selectionDrill.options.map((opt) => {
                 const picked = selectedOption === opt.id;
-                let tone = "bg-paper hover:bg-tint";
+                let tone = "bg-sheet border-edge hover:border-line";
                 if (revealed) {
-                  if (opt.correct) tone = "bg-good-soft text-good";
-                  else if (picked) tone = "bg-pen-soft text-pen-deep";
-                  else tone = "bg-paper opacity-50";
+                  if (opt.correct) tone = "bg-good-soft border-good/30 text-good";
+                  else if (picked) tone = "bg-pen-soft border-pen/30 text-pen-deep";
+                  else tone = "bg-sheet border-edge opacity-50";
                 }
                 return (
                   <li key={opt.id}>
                     <button
                       onClick={() => handleSelectOption(opt)}
                       disabled={revealed}
-                      className={`w-full text-left p-4 rounded-lg transition-colors ${tone}`}
+                      className={`w-full text-left p-4 rounded-xl border transition-colors ${tone}`}
                     >
                       <div className="flex items-start gap-3">
-                        <span className="font-serif italic text-[16px] w-4 shrink-0">{opt.id}</span>
+                        <span className="w-6 h-6 rounded-full bg-tint text-[12px] font-semibold uppercase flex items-center justify-center shrink-0">{opt.id}</span>
                         <span className="font-serif text-[16px] leading-relaxed">{opt.text}</span>
                       </div>
                       {revealed && (picked || opt.correct) && (
-                        <p className="mt-2 pl-7 text-[14px] font-medium">{opt.feedback}</p>
+                        <p className="mt-2 pl-9 text-[14px] font-medium">{opt.feedback}</p>
                       )}
                     </button>
                   </li>
@@ -168,12 +168,12 @@ export const SpacedPracticeModal = ({ wordItem, isOpen, onClose }) => {
                 Check my sentence
               </button>
             ) : sentenceUsesWord ? (
-              <p className="flex items-start gap-2 rounded-lg bg-good-soft text-good p-4 text-[14.5px]">
+              <p className="flex items-start gap-2 rounded-xl bg-good-soft text-good p-4 text-[14.5px]">
                 <CheckCircle size={18} weight="fill" className="shrink-0 mt-0.5" />
                 <span>Saved. This use of “{currentWord}” is now part of your writing history.</span>
               </p>
             ) : (
-              <p className="flex items-start gap-2 rounded-lg bg-pen-soft text-pen-deep p-4 text-[14.5px]">
+              <p className="flex items-start gap-2 rounded-xl bg-pen-soft text-pen-deep p-4 text-[14.5px]">
                 <XCircle size={18} weight="fill" className="shrink-0 mt-0.5" />
                 <span>The sentence does not use “{currentWord}” yet. Try again.</span>
               </p>
@@ -191,13 +191,13 @@ export const SpacedPracticeModal = ({ wordItem, isOpen, onClose }) => {
                 Show the meaning
               </button>
             ) : (
-              <div className="rounded-lg bg-paper p-5 space-y-4 fade">
+              <div className="inset border border-edge p-5 space-y-4 fade">
                 <div>
-                  <div className="text-[13px] text-ink-3">Dictionary meaning</div>
+                  <div className="eyebrow">Dictionary meaning</div>
                   <p className="mt-1 font-serif text-[17px] leading-relaxed">{wordItem.correctDef}</p>
                 </div>
                 <div>
-                  <div className="text-[13px] text-ink-3">What you wrote when you saved it</div>
+                  <div className="eyebrow">What you wrote when you saved it</div>
                   <p className="mt-1 font-serif italic text-[16px] text-ink-2">
                     {wordItem.personalDef ? `“${wordItem.personalDef}”` : "Nothing recorded"}
                   </p>
@@ -208,14 +208,14 @@ export const SpacedPracticeModal = ({ wordItem, isOpen, onClose }) => {
         )}
       </div>
 
-      <div className="px-6 py-4 flex items-center justify-between bg-paper rounded-b-[12px]">
+      <div className="px-6 py-4 flex items-center justify-between border-t border-rule">
         {revealed ? (
           <button onClick={resetDrill} className="btn btn-ghost btn-sm -ml-2">
             <ArrowCounterClockwise size={15} />
             <span>Try again</span>
           </button>
         ) : (
-          <span className="text-[13px] text-ink-3">Next review in 3 days</span>
+          <span className="tag tag-info">Next review in 3 days</span>
         )}
         <button onClick={onClose} className="btn btn-quiet btn-sm">
           Done

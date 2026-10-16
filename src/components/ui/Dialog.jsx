@@ -14,7 +14,7 @@ export const Dialog = ({ onClose, labelledBy, variant = "center", width = "sm:ma
     };
   }, [onClose]);
 
-  const floating = "shadow-[0_24px_64px_-24px_rgb(22_24_28/0.5)]";
+  const floating = "shadow-[0_24px_64px_-24px_rgb(27_26_23/0.45)]";
 
   return (
     <div
@@ -29,8 +29,8 @@ export const Dialog = ({ onClose, labelledBy, variant = "center", width = "sm:ma
         aria-labelledby={labelledBy}
         className={
           variant === "drawer"
-            ? `slide-in relative w-full max-w-md h-full bg-sheet flex flex-col ${floating}`
-            : `pop relative bg-sheet w-full ${width} rounded-t-[14px] sm:rounded-[12px] max-h-[92dvh] flex flex-col ${floating}`
+            ? `slide-in relative w-full max-w-md h-full bg-sheet border-l border-edge flex flex-col ${floating}`
+            : `pop relative bg-sheet w-full ${width} border border-edge rounded-t-[18px] sm:rounded-[18px] max-h-[92dvh] flex flex-col ${floating}`
         }
       >
         {children}
