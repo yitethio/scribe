@@ -13,6 +13,7 @@ import {
 import { useScribe } from "../store/scribeContext";
 import { AppLayout } from "../components/layout/AppLayout";
 import { Dialog } from "../components/ui/Dialog";
+import { BookCover } from "../components/ui/BookCover";
 
 export default function BookSession() {
   const { state, updateBookSession, addBookSessionWord, addVocabularyWord } = useScribe();
@@ -200,31 +201,31 @@ export default function BookSession() {
     <AppLayout title="Book session" hideTopHeader={true}>
       <div className="flex flex-col lg:h-[100dvh] lg:overflow-hidden bg-paper">
         {/* Session bar */}
-        <header className="min-h-16 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 shrink-0">
+        <header className="min-h-20 px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 shrink-0">
           <div className="flex items-center gap-4 min-w-0">
             <Link to="/" className="btn btn-ghost btn-sm -ml-2">
               <CaretLeft size={15} />
               <span>Dashboard</span>
             </Link>
             <div className="min-w-0">
-              <h1 className="font-serif text-[20px] leading-tight font-medium truncate">{bookSession.bookTitle}</h1>
-              <p className="text-[13px] text-ink-3 tabular">
-                Page {bookSession.currentPage} of {bookSession.totalPages}
+              <p className="eyebrow tabular">
+                Book session · page {bookSession.currentPage} of {bookSession.totalPages}
               </p>
+              <h1 className="mt-1 font-serif text-[24px] leading-tight tracking-[-0.015em] truncate">{bookSession.bookTitle}</h1>
             </div>
           </div>
 
           <div className="flex items-center gap-5 sm:gap-7 text-[13px] text-ink-3">
             <div>
-              <div className="font-serif text-[22px] leading-none text-ink tabular">{wordsRewrittenCount.toLocaleString()}</div>
+              <div className="font-serif text-[26px] leading-none text-ink tabular">{wordsRewrittenCount.toLocaleString()}</div>
               <div className="mt-1">words rewritten</div>
             </div>
             <div>
-              <div className="font-serif text-[22px] leading-none text-pen tabular">{bookSession.sessionVocabulary.length}</div>
+              <div className="font-serif text-[26px] leading-none text-pen tabular">{bookSession.sessionVocabulary.length}</div>
               <div className="mt-1">new words</div>
             </div>
             <div>
-              <div className="font-serif text-[22px] leading-none text-ink tabular">{formatTimer(elapsedSeconds)}</div>
+              <div className="font-serif text-[26px] leading-none text-ink tabular">{formatTimer(elapsedSeconds)}</div>
               <div className="mt-1">this session</div>
             </div>
             <button onClick={() => setSessionActive(!sessionActive)} className="btn btn-quiet btn-sm">
@@ -237,7 +238,8 @@ export default function BookSession() {
           /* Setup */
           <div className="flex-1 overflow-y-auto px-5 py-10 sm:py-16">
             <div className="max-w-2xl mx-auto">
-              <h2 className="font-serif text-[34px] sm:text-[40px] leading-[1.05] font-medium tracking-[-0.02em]">
+              <p className="eyebrow">New book session</p>
+              <h2 className="mt-2.5 font-serif text-[36px] sm:text-[46px] leading-[1.05] tracking-[-0.025em]">
                 Choose a book to rewrite
               </h2>
               <p className="mt-3 text-[16px] text-ink-2 max-w-[56ch]">
@@ -256,12 +258,14 @@ export default function BookSession() {
                   setDragOver(false);
                   if (e.dataTransfer.files[0]) handlePdfFileSelect(e.dataTransfer.files[0]);
                 }}
-                className={`mt-8 rounded-[10px] px-6 py-12 text-center transition-colors ${
-                  dragOver ? "bg-pen-soft" : "bg-sheet"
+                className={`mt-8 rounded-2xl border border-dashed px-6 py-12 text-center transition-colors ${
+                  dragOver ? "bg-pen-soft border-pen" : "bg-sheet border-line"
                 }`}
               >
-                <UploadSimple size={30} className="mx-auto text-pen" />
-                <h3 className="mt-4 font-serif text-[22px] font-medium">Drop a PDF here</h3>
+                <span className="icon-tile w-12 h-12 mx-auto text-pen">
+                  <UploadSimple size={22} />
+                </span>
+                <h3 className="mt-4 font-serif text-[24px]">Drop a PDF here</h3>
                 <p className="mt-1 text-[14px] text-ink-2">or pick one from your computer</p>
                 <label className="btn btn-primary mt-6">
                   <span>Choose a PDF</span>
@@ -277,19 +281,16 @@ export default function BookSession() {
                 </p>
               </div>
 
-              <div className="mt-4 rounded-[10px] bg-sheet p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="mt-4 card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <img
-                    src={bookSession.coverUrl || "/book-cover.jpg"}
-                    alt=""
-                    className="w-12 h-[72px] object-cover rounded-[3px]"
-                  />
+                  <BookCover title="The Craft of Prose" />
                   <div>
-                    <div className="font-serif text-[18px] leading-snug">The Craft of Prose: Guide to Elegant Writing</div>
+                    <div className="eyebrow">Sample book</div>
+                    <div className="mt-1 font-serif text-[20px] leading-snug">The Craft of Prose: Guide to Elegant Writing</div>
                     <div className="text-[13px] text-ink-3">Eleanor Vance · 312 pages · fourth edition</div>
                   </div>
                 </div>
-                <button onClick={() => setSessionActive(true)} className="btn btn-quiet shrink-0">
+                <button onClick={() => setSessionActive(true)} className="btn btn-outline shrink-0">
                   Use the sample book
                 </button>
               </div>
@@ -301,14 +302,14 @@ export default function BookSession() {
           </div>
         ) : (
           /* Split workspace */
-          <div ref={containerRef} className="flex-1 flex flex-col lg:flex-row lg:overflow-hidden min-h-0">
+          <div ref={containerRef} className="flex-1 flex flex-col lg:flex-row lg:overflow-hidden min-h-0 px-3 sm:px-6 pb-3 sm:pb-6 gap-4 lg:gap-0">
             {/* Book */}
             <section
               style={{ "--w": `${splitRatio}%` }}
-              className="w-full lg:w-[var(--w)] flex flex-col bg-rail lg:overflow-hidden select-text"
+              className="w-full lg:w-[var(--w)] flex flex-col bg-rail border border-rail-line rounded-2xl overflow-hidden select-text"
               aria-label="Reference book"
             >
-              <div className="h-12 px-3 flex items-center justify-between shrink-0 text-[13px] text-ink-2">
+              <div className="h-14 px-3 flex items-center justify-between shrink-0 text-[13px] text-ink-2 border-b border-rail-line">
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handlePageChange(bookSession.currentPage - 1)}
@@ -362,14 +363,14 @@ export default function BookSession() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-10 pt-2 flex justify-center">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-10 pt-6 flex justify-center">
                 <article
                   style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center" }}
-                  className="w-full max-w-[560px] bg-sheet rounded-[4px] px-8 sm:px-12 pt-12 pb-8 font-serif text-ink flex flex-col justify-between min-h-[720px] transition-transform duration-150"
+                  className="w-full max-w-[560px] bg-sheet border border-edge rounded-[6px] shadow-[0_10px_30px_-18px_rgb(27_26_23/0.35)] px-8 sm:px-12 pt-12 pb-8 font-serif text-ink flex flex-col justify-between min-h-[720px] transition-transform duration-150"
                 >
                   <div>
                     <header className="text-center">
-                      <div className="text-[13px] font-sans text-ink-3">{currentPageData.chapter}</div>
+                      <div className="eyebrow font-sans">{currentPageData.chapter}</div>
                       <h2 className="mt-1 italic text-[20px]">{currentPageData.subhead}</h2>
                     </header>
                     <div className="mt-8 space-y-4 text-[16.5px] leading-[1.75]">
@@ -391,11 +392,11 @@ export default function BookSession() {
               role="separator"
               aria-orientation="vertical"
               aria-label="Drag to resize"
-              className="hidden lg:flex w-3 -mx-1.5 z-10 cursor-col-resize items-center justify-center group shrink-0"
+              className="hidden lg:flex w-6 z-10 cursor-col-resize items-center justify-center group shrink-0"
             >
               <span
                 className={`w-1 h-12 rounded-full transition-colors ${
-                  isDragging ? "bg-pen" : "bg-tint-2 group-hover:bg-ink-3"
+                  isDragging ? "bg-pen" : "bg-line group-hover:bg-ink-3"
                 }`}
               />
             </div>
@@ -403,16 +404,16 @@ export default function BookSession() {
             {/* Rewrite */}
             <section
               style={{ "--w": `${100 - splitRatio}%` }}
-              className="w-full lg:w-[var(--w)] flex flex-col bg-sheet lg:overflow-hidden min-h-[70vh] lg:min-h-0"
+              className="card w-full lg:w-[var(--w)] flex flex-col overflow-hidden min-h-[70vh] lg:min-h-0"
               aria-label="Your rewrite"
             >
-              <div className="px-5 sm:px-8 py-3 flex items-center gap-3 shrink-0 overflow-x-auto">
-                <span className="text-[13px] text-ink-3 shrink-0">New words</span>
+              <div className="h-14 px-5 sm:px-6 flex items-center gap-2.5 shrink-0 overflow-x-auto border-b border-rule">
+                <span className="eyebrow shrink-0 mr-1">New words</span>
                 {bookSession.sessionVocabulary.map((word, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleOpenChip(word)}
-                    className="tag tag-pen font-serif text-[14px] h-7 px-2.5 hover:bg-[#f1d3cb] transition-colors shrink-0"
+                    className="chip font-serif text-[14px] text-ink hover:border-pen hover:text-pen transition-colors shrink-0"
                   >
                     {word}
                   </button>
@@ -447,11 +448,11 @@ export default function BookSession() {
                 )}
               </div>
 
-              <div className="h-10 px-5 sm:px-8 flex items-center justify-between text-[13px] text-ink-3 shrink-0">
+              <div className="h-12 px-5 sm:px-6 flex items-center justify-between text-[13px] text-ink-3 shrink-0 border-t border-rule">
                 <span className="tabular">{wordsRewrittenCount} words rewritten</span>
-                <span className="flex items-center gap-1.5 text-good">
-                  <CheckCircle size={14} weight="fill" />
-                  <span>Saved</span>
+                <span className="tag tag-good">
+                  <CheckCircle size={13} weight="fill" />
+                  Saved
                 </span>
               </div>
             </section>
@@ -465,12 +466,12 @@ export default function BookSession() {
               <div className="px-6 pt-6 flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-baseline gap-3">
-                    <h3 id="word-card-title" className="font-serif text-[30px] leading-none font-medium">
+                    <h3 id="word-card-title" className="font-serif text-[32px] leading-none">
                       {selectedWordChip}
                     </h3>
                     <span className="text-[14px] italic font-serif text-ink-3">{activeChipVocabItem.pos?.toLowerCase()}</span>
                   </div>
-                  <p className="mt-2 text-[13px] text-ink-3">Found while rewriting</p>
+                  <p className="mt-2.5"><span className="tag tag-pen tag-caps">Found while rewriting</span></p>
                 </div>
                 <button onClick={() => setSelectedWordChip(null)} className="btn btn-ghost btn-icon -mr-2" aria-label="Close">
                   <X size={18} />
@@ -504,23 +505,23 @@ export default function BookSession() {
                   </button>
                 ) : (
                   <div className="space-y-4 fade">
-                    <div className="rounded-lg bg-paper p-5 space-y-4">
+                    <div className="inset border border-edge p-5 space-y-4">
                       <div>
-                        <div className="text-[13px] text-ink-3">Dictionary meaning</div>
+                        <div className="eyebrow">Dictionary meaning</div>
                         <p className="mt-1 font-serif text-[17px] leading-relaxed">{activeChipVocabItem.correctDef}</p>
                       </div>
                       <div>
-                        <div className="text-[13px] text-ink-3">Goes with</div>
+                        <div className="eyebrow">Goes with</div>
                         <div className="mt-1.5 flex flex-wrap gap-1.5">
                           {activeChipVocabItem.collocations?.map((c, i) => (
-                            <span key={i} className="tag bg-sheet font-serif text-[14px]">
+                            <span key={i} className="chip bg-sheet font-serif text-[14px]">
                               {c}
                             </span>
                           ))}
                         </div>
                       </div>
                       <div>
-                        <div className="text-[13px] text-ink-3">Example</div>
+                        <div className="eyebrow">Example</div>
                         <p className="mt-1 font-serif italic text-[16px] text-ink-2">&ldquo;{activeChipVocabItem.example}&rdquo;</p>
                       </div>
                     </div>
