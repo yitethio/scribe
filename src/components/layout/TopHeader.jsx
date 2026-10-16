@@ -1,51 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  PenNib,
-  BookOpenText,
-  Trophy,
-  ArrowsClockwise,
-  CaretDown,
-  BookmarkSimple
-} from "@phosphor-icons/react";
+import { Link, useNavigate } from "react-router-dom";
+import { PencilSimpleLine, BookOpen, Trophy, ArrowsClockwise, CaretDown } from "@phosphor-icons/react";
 
 const sessionModes = [
-  {
-    path: "/write",
-    icon: PenNib,
-    title: "Free writing",
-    detail: "A blank page, with the coach if you want it"
-  },
-  {
-    path: "/book-session",
-    icon: BookOpenText,
-    title: "Book rewrite",
-    detail: "Read on the left, rewrite on the right"
-  },
-  {
-    path: "/challenges",
-    icon: Trophy,
-    title: "Weekly challenge",
-    detail: "Use 8 of this week's 12 words"
-  },
-  {
-    path: "/revision-mode",
-    icon: ArrowsClockwise,
-    title: "Revision lab",
-    detail: "Repair one sentence at a time"
-  }
+  { path: "/write", icon: PencilSimpleLine, title: "Free writing", detail: "A blank page, with the coach if you want it" },
+  { path: "/book-session", icon: BookOpen, title: "Book rewrite", detail: "Read on the left, rewrite on the right" },
+  { path: "/challenges", icon: Trophy, title: "Weekly challenge", detail: "Use 8 of this week's 12 words" },
+  { path: "/revision-mode", icon: ArrowsClockwise, title: "Revision lab", detail: "Repair one sentence at a time" }
 ];
 
-export const StartSessionMenu = ({ align = "right" }) => {
+export const todayLabel = () =>
+  new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+
+// A split button: the main half starts free writing, the caret picks another kind of session.
+export const StartSessionMenu = ({ compact = false }) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
     if (!open) return;
-    const onDown = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
+    const onDown = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false);
     const onKey = (e) => e.key === "Escape" && setOpen(false);
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
@@ -55,22 +30,32 @@ export const StartSessionMenu = ({ align = "right" }) => {
     };
   }, [open]);
 
+  const height = compact ? "h-10" : "h-12";
+
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative flex" ref={ref}>
+      <Link
+        to="/write"
+        className={`flex items-center gap-2.5 ${height} px-5 bg-ink text-sheet rounded-l-[10px] font-semibold hover:bg-black transition-colors`}
+      >
+        <PencilSimpleLine size={16} />
+        Start a session
+      </Link>
       <button
+        type="button"
         onClick={() => setOpen(!open)}
+        aria-label="Choose session type"
         aria-expanded={open}
         aria-haspopup="menu"
-        className="btn btn-primary"
+        className={`${height} ${compact ? "w-10" : "w-12"} bg-ink text-sheet border-l border-[#45423b] rounded-r-[10px] flex items-center justify-center hover:bg-black transition-colors`}
       >
-        <span>Start a session</span>
-        <CaretDown size={14} weight="bold" className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        <CaretDown size={16} weight="bold" className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
         <div
           role="menu"
-          className={`pop absolute ${align === "right" ? "right-0" : align === "left" ? "left-0" : "left-0 md:left-auto md:right-0"} mt-2 w-72 bg-sheet rounded-lg p-1.5 z-50 shadow-[0_12px_32px_-12px_rgb(22_24_28/0.28),0_2px_6px_rgb(22_24_28/0.06)]`}
+          className="pop absolute right-0 top-full mt-2 w-72 bg-sheet border border-edge rounded-xl p-1.5 z-50 shadow-[0_12px_32px_-12px_rgb(27_26_23/0.3)]"
         >
           {sessionModes.map((mode) => {
             const Icon = mode.icon;
@@ -82,11 +67,11 @@ export const StartSessionMenu = ({ align = "right" }) => {
                   setOpen(false);
                   navigate(mode.path);
                 }}
-                className="w-full text-left px-3 py-2.5 rounded-md hover:bg-paper flex items-start gap-3 transition-colors"
+                className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-tint flex items-start gap-3 transition-colors"
               >
-                <Icon size={18} className="text-ink-2 mt-0.5 shrink-0" />
+                <Icon size={18} className="text-ink-soft mt-0.5 shrink-0" />
                 <span>
-                  <span className="block text-[14px] font-medium text-ink">{mode.title}</span>
+                  <span className="block text-[14px] font-semibold">{mode.title}</span>
                   <span className="block text-[13px] text-ink-3">{mode.detail}</span>
                 </span>
               </button>
@@ -98,40 +83,33 @@ export const StartSessionMenu = ({ align = "right" }) => {
   );
 };
 
-export const TopHeader = ({ title, subtitle, onOpenCaptureModal, compact = false }) => {
+export const TopHeader = ({ title, subtitle, eyebrow, compact = false }) => {
   if (compact) {
     return (
       <header className="h-16 px-6 lg:px-8 flex items-center justify-between gap-4 bg-paper shrink-0">
         <div className="min-w-0 flex items-baseline gap-3">
-          <h1 className="font-serif text-[22px] font-medium tracking-[-0.01em] truncate">{title}</h1>
+          <h1 className="font-serif text-[24px] tracking-[-0.015em] truncate">{title}</h1>
           {subtitle && <p className="hidden xl:block text-[14px] text-ink-3 truncate">{subtitle}</p>}
         </div>
-        <div className="hidden md:flex items-center gap-2 shrink-0">
-          <button onClick={onOpenCaptureModal} className="btn btn-ghost">
-            <BookmarkSimple size={17} className="text-pen" />
-            <span>Save a word</span>
-          </button>
-          <StartSessionMenu />
+        <div className="hidden md:flex shrink-0">
+          <StartSessionMenu compact />
         </div>
       </header>
     );
   }
 
   return (
-    <header className="px-5 sm:px-8 lg:px-12 pt-8 lg:pt-14 pb-8 lg:pb-10 max-w-[1240px] mx-auto w-full">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="max-w-2xl rise">
-          <h1 className="font-serif text-[34px] sm:text-[44px] leading-[1.02] font-medium tracking-[-0.025em]">
+    <header className="w-full max-w-[1232px] mx-auto px-[clamp(16px,4vw,56px)] pt-8 lg:pt-11 pb-7">
+      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5">
+        <div className="flex-[1_1_480px] min-w-0 flex flex-col gap-2.5 rise">
+          <p className="text-[13px] font-medium text-ink-3">{eyebrow || todayLabel()}</p>
+          <h1 className="font-serif font-normal text-[clamp(36px,4.4vw,52px)] leading-[1.05] tracking-[-0.025em]">
             {title || "Scribe"}
           </h1>
-          {subtitle && <p className="mt-3 text-[16px] text-ink-2 max-w-[60ch]">{subtitle}</p>}
+          {subtitle && <p className="max-w-[600px] text-[16px] text-ink-2">{subtitle}</p>}
         </div>
-        <div className="flex items-center gap-2 shrink-0 rise" style={{ "--i": 1 }}>
-          <button onClick={onOpenCaptureModal} className="btn btn-ghost hidden md:inline-flex">
-            <BookmarkSimple size={17} className="text-pen" />
-            <span>Save a word</span>
-          </button>
-          <StartSessionMenu align="left-md-right" />
+        <div className="flex shrink-0 rise" style={{ "--i": 1 }}>
+          <StartSessionMenu />
         </div>
       </div>
     </header>

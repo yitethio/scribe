@@ -1,174 +1,221 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 import {
   SquaresFour,
-  PenNib,
-  BookOpenText,
-  Books,
+  PencilSimpleLine,
+  BookOpen,
   Trophy,
   ArrowsClockwise,
+  BookmarkSimple,
   TrendUp,
   IdentificationCard,
-  BookmarkSimple,
+  Plus,
+  CaretUpDown,
   ArrowCounterClockwise,
   X
 } from "@phosphor-icons/react";
 import { useScribe } from "../../store";
 
-const MONTHLY_GOAL = 5000;
-
-const navItems = [
-  { path: "/", label: "Dashboard", icon: SquaresFour },
-  { path: "/write", label: "Write", icon: PenNib },
-  { path: "/book-session", label: "Book session", icon: BookOpenText },
-  { path: "/vocabulary", label: "Vocabulary", icon: Books, countKey: "vocab" },
-  { path: "/challenges", label: "Challenges", icon: Trophy },
-  { path: "/revision-mode", label: "Revision lab", icon: ArrowsClockwise },
-  { path: "/progress", label: "Progress", icon: TrendUp },
-  { path: "/profile", label: "Writing profile", icon: IdentificationCard }
+const navGroups = [
+  {
+    items: [{ path: "/", label: "Dashboard", icon: SquaresFour }]
+  },
+  {
+    label: "Practice",
+    items: [
+      { path: "/write", label: "Write", icon: PencilSimpleLine },
+      { path: "/book-session", label: "Book session", icon: BookOpen },
+      { path: "/challenges", label: "Challenges", icon: Trophy },
+      { path: "/revision-mode", label: "Revision lab", icon: ArrowsClockwise }
+    ]
+  },
+  {
+    label: "You",
+    items: [
+      { path: "/vocabulary", label: "Vocabulary", icon: BookmarkSimple, countKey: "vocab" },
+      { path: "/progress", label: "Progress", icon: TrendUp },
+      { path: "/profile", label: "Writing profile", icon: IdentificationCard }
+    ]
+  }
 ];
 
 export const Wordmark = ({ className = "" }) => (
-  <Link to="/" className={`inline-flex flex-col leading-none group ${className}`}>
-    <span className="font-serif text-[26px] font-medium tracking-[-0.02em] text-ink">
-      Scribe
-    </span>
-    <svg
-      viewBox="0 0 80 8"
-      className="w-[64px] h-[6px] -mt-0.5 text-pen transition-transform duration-300 group-hover:translate-x-0.5"
-      aria-hidden="true"
-    >
-      <path
-        d="M2 5.5c12-3 25-3.6 38-2 13 1.6 25 1.2 38-2"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-    </svg>
+  <Link to="/" className={`inline-flex items-center gap-2.5 ${className}`}>
+    <PencilSimpleLine size={26} className="text-pen" />
+    <span className="font-serif text-[28px] leading-none tracking-[-0.02em] text-ink">Scribe</span>
   </Link>
 );
 
-export const Sidebar = ({ onOpenCaptureModal, onNavigate, onClose }) => {
-  const { state, resetToDefaults } = useScribe();
-  const { user, vocabulary } = state;
-  const goalPercent = Math.min(100, Math.round((user.wordsWrittenThisMonth / MONTHLY_GOAL) * 100));
+const initials = (name) =>
+  name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+const AccountMenu = ({ onNavigate }) => {
+  const { resetToDefaults } = useScribe();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false);
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   return (
-    <aside className="w-64 bg-rail flex flex-col h-full select-none">
-      <div className="px-6 pt-6 pb-5 flex items-start justify-between">
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-label="Account menu"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className="btn btn-ghost btn-icon"
+      >
+        <CaretUpDown size={18} />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="pop absolute bottom-full right-0 mb-2 w-56 bg-sheet border border-edge rounded-xl p-1.5 z-50 shadow-[0_12px_32px_-12px_rgb(27_26_23/0.3)]"
+        >
+          <Link
+            to="/profile"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onNavigate?.();
+            }}
+            className="flex items-center gap-3 px-3 h-10 rounded-lg hover:bg-tint text-[14px]"
+          >
+            <IdentificationCard size={17} className="text-ink-3" />
+            Writing profile
+          </Link>
+          <button
+            role="menuitem"
+            onClick={() => {
+              resetToDefaults();
+              setOpen(false);
+            }}
+            className="w-full flex items-center gap-3 px-3 h-10 rounded-lg hover:bg-tint text-[14px] text-left"
+          >
+            <ArrowCounterClockwise size={17} className="text-ink-3" />
+            Reset the sample data
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const Sidebar = ({ onOpenCaptureModal, onNavigate, onClose }) => {
+  const { state } = useScribe();
+  const { user, vocabulary } = state;
+  const [draftWord, setDraftWord] = useState("");
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    onOpenCaptureModal(draftWord.trim());
+    setDraftWord("");
+    onNavigate?.();
+  };
+
+  const roleWords = user.role.split(" • ")[0].split(" ");
+  const title = roleWords.pop();
+  const level = roleWords.join(" ");
+
+  return (
+    <aside className="w-[288px] h-full bg-rail border-r border-rail-line flex flex-col gap-7 px-5 pt-7 pb-6 overflow-y-auto">
+      <div className="flex items-center justify-between px-2">
         <Wordmark />
         {onClose && (
-          <button onClick={onClose} className="btn btn-ghost btn-icon -mr-2 -mt-1" aria-label="Close menu">
+          <button onClick={onClose} className="btn btn-ghost btn-icon -mr-3" aria-label="Close menu">
             <X size={18} />
           </button>
         )}
       </div>
 
-      <div className="px-4 pb-4">
-        <button
-          onClick={() => {
-            onOpenCaptureModal();
-            onNavigate?.();
-          }}
-          className="btn btn-quiet w-full justify-start bg-sheet hover:bg-tint"
-        >
-          <BookmarkSimple size={17} weight="bold" className="text-pen" />
-          <span>Save a word</span>
-        </button>
-      </div>
+      <form onSubmit={handleSave} className="flex flex-col gap-1.5">
+        <label htmlFor="save-word" className="text-[12px] font-medium text-ink-3 px-1">
+          Save a word
+        </label>
+        <div className="flex items-center gap-2 h-11 pl-3 pr-1.5 bg-sheet border border-line rounded-[10px] focus-within:border-ink transition-colors">
+          <BookmarkSimple size={16} className="text-ink-3 shrink-0" />
+          <input
+            id="save-word"
+            type="text"
+            value={draftWord}
+            onChange={(e) => setDraftWord(e.target.value)}
+            placeholder="Type a word you met…"
+            className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[14px] placeholder:text-ink-3"
+          />
+          <button
+            type="submit"
+            aria-label="Save word"
+            className="w-8 h-8 rounded-[7px] bg-ink text-sheet flex items-center justify-center hover:bg-black transition-colors shrink-0"
+          >
+            <Plus size={14} weight="bold" />
+          </button>
+        </div>
+      </form>
 
-      <nav className="flex-1 px-3 overflow-y-auto" aria-label="Main">
-        <ul className="space-y-0.5">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <li key={item.path}>
+      <nav aria-label="Main" className="flex-1 flex flex-col gap-5">
+        {navGroups.map((group, gi) => (
+          <div key={gi} className="flex flex-col gap-0.5">
+            {group.label && <div className="eyebrow text-[11px] px-3 pb-1.5">{group.label}</div>}
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              return (
                 <NavLink
+                  key={item.path}
                   to={item.path}
                   end={item.path === "/"}
                   onClick={onNavigate}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 h-10 px-3 rounded-md text-[14px] transition-colors ${
+                    `flex items-center gap-3 h-10 px-3 rounded-[9px] text-[15px] transition-colors ${
                       isActive
-                        ? "bg-sheet text-ink font-medium"
-                        : "text-ink-2 hover:bg-tint hover:text-ink"
+                        ? "bg-sheet font-semibold text-ink shadow-[0_0_0_1px_var(--color-rail-line)]"
+                        : "text-ink-soft hover:bg-[#e8e3d8]"
                     }`
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      <Icon
-                        size={18}
-                        weight={isActive ? "fill" : "regular"}
-                        className={isActive ? "text-pen" : "text-ink-3"}
-                      />
+                      <Icon size={18} className={isActive ? "text-pen" : ""} />
                       <span className="flex-1">{item.label}</span>
-                      {item.countKey === "vocab" && (
-                        <span className="text-[13px] text-ink-3 tabular">{vocabulary.length}</span>
-                      )}
+                      {item.countKey === "vocab" && <span className="count">{vocabulary.length}</span>}
                     </>
                   )}
                 </NavLink>
-              </li>
-            );
-          })}
-        </ul>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
-      <div className="px-6 pt-5 pb-4 space-y-5">
-        <div>
-          <div className="flex items-baseline gap-2">
-            <span className="font-serif text-[34px] leading-none tracking-[-0.02em] tabular">
-              {user.streakDays}
-            </span>
-            <span className="text-[14px] text-ink-2">day streak</span>
-          </div>
-          <div className="flex gap-1 mt-3" aria-label="Last seven days">
-            {user.streakHistory.slice(0, 7).map((active, idx) => (
-              <span
-                key={idx}
-                className={`h-1.5 flex-1 rounded-full ${active ? "bg-pen" : "bg-tint-2"}`}
-                title={`Day ${idx + 1}: ${active ? "written" : "missed"}`}
-              />
-            ))}
-          </div>
-          <div className="mt-4 flex items-center justify-between text-[13px] text-ink-2">
-            <span>This month</span>
-            <span className="tabular text-ink">
-              {user.wordsWrittenThisMonth.toLocaleString()} of {MONTHLY_GOAL.toLocaleString()}
-            </span>
-          </div>
-          <div className="mt-1.5 h-1 rounded-full bg-tint-2 overflow-hidden">
-            <div className="h-full bg-ink rounded-full grow-x" style={{ width: `${goalPercent}%` }} />
-          </div>
+      <div className="flex items-center gap-3 p-3 border-t border-rail-line">
+        <div
+          aria-hidden="true"
+          className="w-[38px] h-[38px] rounded-full bg-ink text-paper flex items-center justify-center font-serif text-[16px] shrink-0"
+        >
+          {initials(user.name)}
         </div>
-
-        <div className="flex items-center justify-between gap-2">
-          <Link
-            to="/profile"
-            onClick={onNavigate}
-            className="flex items-center gap-2.5 min-w-0 rounded-md -ml-1 p-1 hover:bg-tint transition-colors"
-          >
-            <img
-              src={user.avatar || "/avatar.jpg"}
-              alt=""
-              className="w-8 h-8 rounded-md object-cover shrink-0"
-            />
-            <span className="min-w-0">
-              <span className="block text-[13.5px] font-medium text-ink truncate">{user.name}</span>
-              <span className="block text-[12.5px] text-ink-3 truncate">{user.role.split(" • ")[0]}</span>
-            </span>
-          </Link>
-          <button
-            onClick={resetToDefaults}
-            title="Reset the sample data"
-            aria-label="Reset the sample data"
-            className="btn btn-ghost btn-icon shrink-0"
-          >
-            <ArrowCounterClockwise size={16} />
-          </button>
+        <div className="flex-1 min-w-0 flex flex-col leading-tight">
+          <span className="font-semibold text-[14px] truncate">{user.name}</span>
+          <span className="text-[12px] text-ink-3 truncate">
+            {level} · {title}
+          </span>
         </div>
+        <AccountMenu onNavigate={onNavigate} />
       </div>
     </aside>
   );

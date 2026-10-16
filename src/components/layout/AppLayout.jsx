@@ -4,9 +4,9 @@ import { Sidebar, Wordmark } from "./Sidebar";
 import { TopHeader } from "./TopHeader";
 import { VocabCaptureModal } from "../vocabulary/VocabCaptureModal";
 
-export const pageClass = "px-5 sm:px-8 lg:px-12 pb-24 max-w-[1240px] mx-auto w-full";
+export const pageClass = "w-full max-w-[1232px] mx-auto px-[clamp(16px,4vw,56px)] pb-[72px]";
 
-export const AppLayout = ({ children, title, subtitle, hideTopHeader = false, compactHeader = false }) => {
+export const AppLayout = ({ children, title, subtitle, eyebrow, hideTopHeader = false, compactHeader = false }) => {
   const [captureModalOpen, setCaptureModalOpen] = useState(false);
   const [captureInitialWord, setCaptureInitialWord] = useState("");
   const [captureInitialContext, setCaptureInitialContext] = useState("");
@@ -37,7 +37,7 @@ export const AppLayout = ({ children, title, subtitle, hideTopHeader = false, co
       {/* Desktop rail */}
       <div className="hidden lg:block shrink-0 bg-rail">
         <div className="sticky top-0 h-[100dvh]">
-          <Sidebar onOpenCaptureModal={() => handleOpenCapture()} />
+          <Sidebar onOpenCaptureModal={(word) => handleOpenCapture(word)} />
         </div>
       </div>
 
@@ -51,7 +51,7 @@ export const AppLayout = ({ children, title, subtitle, hideTopHeader = false, co
           />
           <div className="slide-in-left absolute inset-y-0 left-0 h-full">
             <Sidebar
-              onOpenCaptureModal={() => handleOpenCapture()}
+              onOpenCaptureModal={(word) => handleOpenCapture(word)}
               onNavigate={() => setMenuOpen(false)}
               onClose={() => setMenuOpen(false)}
             />
@@ -70,7 +70,7 @@ export const AppLayout = ({ children, title, subtitle, hideTopHeader = false, co
             >
               <List size={20} />
             </button>
-            <Wordmark className="scale-[0.85]" />
+            <Wordmark className="scale-[0.8]" />
             <button
               onClick={() => handleOpenCapture()}
               className="btn btn-ghost btn-icon"
@@ -85,6 +85,7 @@ export const AppLayout = ({ children, title, subtitle, hideTopHeader = false, co
           <TopHeader
             title={title}
             subtitle={subtitle}
+            eyebrow={eyebrow}
             compact={compactHeader}
             onOpenCaptureModal={() => handleOpenCapture()}
           />
