@@ -35,7 +35,7 @@ export const AppLayout = ({ children, title, subtitle, eyebrow, hideTopHeader = 
       </a>
 
       {/* Desktop rail */}
-      <div className="hidden lg:block shrink-0 bg-rail">
+      <div className="hidden lg:block shrink-0 bg-rail shadow-[inset_-1px_0_0_var(--color-rail-line)]">
         <div className="sticky top-0 h-[100dvh]">
           <Sidebar onOpenCaptureModal={(word) => handleOpenCapture(word)} />
         </div>
