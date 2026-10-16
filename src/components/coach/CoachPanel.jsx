@@ -27,11 +27,14 @@ export const CoachPanel = ({ onSelectIssue, activeIssueId, onSendToRevision }) =
   const toggle = (setter, id) => setter((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <aside className="w-full lg:w-[380px] xl:w-[400px] bg-rail flex flex-col lg:h-full shrink-0" aria-label="Writing coach">
+    <aside className="card w-full lg:w-[380px] xl:w-[400px] flex flex-col lg:h-full shrink-0 overflow-hidden" aria-label="Writing coach">
       <div className="px-5 pt-5 pb-4 space-y-4">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="font-serif text-[22px] font-medium tracking-[-0.01em]">Your coach</h2>
-          <span className="text-[13px] text-ink-3">It asks. You revise.</span>
+        <div className="flex flex-col gap-1">
+          <span className="eyebrow">Writing coach</span>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-serif text-[26px] leading-tight tracking-[-0.015em]">Your coach</h2>
+            <span className="text-[13px] text-ink-3">It asks. You revise.</span>
+          </div>
         </div>
         <div className="seg w-full" role="group" aria-label="How much the coach says">
           {levels.map((lvl) => (
@@ -47,7 +50,7 @@ export const CoachPanel = ({ onSelectIssue, activeIssueId, onSendToRevision }) =
         </div>
       </div>
 
-      <div className="px-5 flex gap-5 text-[14px]" role="tablist">
+      <div className="px-5 flex gap-5 text-[14px] border-b border-rule" role="tablist">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -56,17 +59,17 @@ export const CoachPanel = ({ onSelectIssue, activeIssueId, onSendToRevision }) =
             onClick={() => setActiveTab(tab.id)}
             className={`pb-2.5 border-b-2 transition-colors ${
               activeTab === tab.id
-                ? "border-ink text-ink font-medium"
+                ? "border-pen text-ink font-semibold"
                 : "border-transparent text-ink-3 hover:text-ink"
             }`}
           >
             {tab.label}
-            {tab.id === "issues" && <span className="ml-1.5 tabular text-ink-3">{openIssues.length}</span>}
+            {tab.id === "issues" && <span className="count ml-2">{openIssues.length}</span>}
           </button>
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-inset">
         {activeTab === "issues" &&
           (openIssues.length === 0 ? (
             <div className="px-4 py-10 text-center">
@@ -80,7 +83,7 @@ export const CoachPanel = ({ onSelectIssue, activeIssueId, onSendToRevision }) =
               return (
                 <article
                   key={issue.id}
-                  className={`rounded-lg transition-colors ${isExpanded ? "bg-sheet" : "bg-paper hover:bg-sheet"}`}
+                  className={`rounded-xl border bg-sheet transition-colors ${isExpanded ? "border-line" : "border-edge hover:border-line"}`}
                 >
                   <button
                     onClick={() => {
@@ -91,7 +94,7 @@ export const CoachPanel = ({ onSelectIssue, activeIssueId, onSendToRevision }) =
                     className="w-full text-left p-4 flex items-start justify-between gap-3"
                   >
                     <div className="min-w-0 space-y-1.5">
-                      <div className="text-[13px] text-ink-3">{sentenceCase(issue.category)}</div>
+                      <span className="tag tag-pen tag-caps">{sentenceCase(issue.category)}</span>
                       <div className="font-serif text-[17px] leading-snug">
                         <span className="pen-mark">{issue.phrase}</span>
                       </div>
@@ -105,12 +108,12 @@ export const CoachPanel = ({ onSelectIssue, activeIssueId, onSendToRevision }) =
 
                   {isExpanded && (
                     <div className="px-4 pb-4 space-y-3 fade">
-                      <div className="rounded-md bg-paper p-3.5">
-                        <div className="flex items-center gap-1.5 text-[13px] text-ink-3">
-                          <Question size={15} />
+                      <div className="panel-dark p-4 rounded-xl">
+                        <div className="eyebrow text-night-mute flex items-center gap-1.5">
+                          <Question size={14} />
                           <span>Your teacher asks</span>
                         </div>
-                        <p className="mt-1 font-serif italic text-[16px] leading-[1.45]">&ldquo;{issue.question}&rdquo;</p>
+                        <p className="mt-2 font-serif italic text-[17px] leading-[1.45] text-night-text">&ldquo;{issue.question}&rdquo;</p>
                       </div>
 
                       {hintRevealed[issue.id] ? (
@@ -119,7 +122,7 @@ export const CoachPanel = ({ onSelectIssue, activeIssueId, onSendToRevision }) =
                           {issue.hint}
                         </p>
                       ) : (
-                        <button onClick={() => toggle(setHintRevealed, issue.id)} className="link text-[14px]">
+                        <button onClick={() => toggle(setHintRevealed, issue.id)} className="link text-[14px] min-h-8">
                           Show a hint
                         </button>
                       )}
@@ -132,7 +135,7 @@ export const CoachPanel = ({ onSelectIssue, activeIssueId, onSendToRevision }) =
                           </p>
                         ) : (
                           <div>
-                            <button onClick={() => toggle(setExplanationRevealed, issue.id)} className="link text-[14px]">
+                            <button onClick={() => toggle(setExplanationRevealed, issue.id)} className="link text-[14px] min-h-8">
                               Explain the rule
                             </button>
                           </div>
@@ -158,18 +161,18 @@ export const CoachPanel = ({ onSelectIssue, activeIssueId, onSendToRevision }) =
 
         {activeTab === "cohesion" && (
           <div className="space-y-2.5">
-            <div className="rounded-lg bg-sheet p-4">
+            <div className="rounded-xl border border-edge bg-sheet p-4">
               <div className="flex items-baseline justify-between gap-3">
                 <h3 className="font-serif text-[18px]">Flow between paragraphs</h3>
-                <span className="tabular text-[14px] font-medium">61</span>
+                <span className="font-serif text-[24px] leading-none tabular">61</span>
               </div>
               <p className="mt-1.5 text-[14px] text-ink-2">
                 Linking words should show a real relationship between ideas, not just stack sentences.
               </p>
             </div>
-            <div className="rounded-lg bg-paper p-4">
-              <div className="text-[13px] text-warn font-medium">Weak transition</div>
-              <p className="mt-1.5 font-serif text-[16px]">
+            <div className="rounded-xl border border-edge bg-sheet p-4">
+              <span className="tag tag-warn tag-caps">Weak transition</span>
+              <p className="mt-2.5 font-serif text-[16px]">
                 <span className="pen-mark">Furthermore</span>, the quick pace facilitates shallower interactions...
               </p>
               <p className="mt-2 text-[14px] text-ink-2">
@@ -181,16 +184,16 @@ export const CoachPanel = ({ onSelectIssue, activeIssueId, onSendToRevision }) =
 
         {activeTab === "clarity" && (
           <div className="space-y-2.5">
-            <div className="rounded-lg bg-sheet p-4">
+            <div className="rounded-xl border border-edge bg-sheet p-4">
               <div className="flex items-baseline justify-between gap-3">
                 <h3 className="font-serif text-[18px]">Clarity and length</h3>
-                <span className="tabular text-[14px] font-medium">74</span>
+                <span className="font-serif text-[24px] leading-none tabular">74</span>
               </div>
               <p className="mt-1.5 text-[14px] text-ink-2">Cut the padding without losing the meaning.</p>
             </div>
-            <div className="rounded-lg bg-paper p-4">
-              <div className="text-[13px] text-warn font-medium">Wordy phrase</div>
-              <p className="mt-1.5 font-serif text-[16px]">
+            <div className="rounded-xl border border-edge bg-sheet p-4">
+              <span className="tag tag-warn tag-caps">Wordy phrase</span>
+              <p className="mt-2.5 font-serif text-[16px]">
                 <span className="pen-mark">Due to the fact that</span>...
               </p>
               <p className="mt-2 text-[14px] text-ink-2">Can you say the same thing in one word? Try "because".</p>

@@ -52,13 +52,13 @@ export default function Write() {
     >
       {({ openCaptureModal }) => (
         <div
-          className={`flex flex-col lg:flex-row bg-paper ${
-            zenMode ? "h-[100dvh]" : "lg:h-[calc(100dvh-4rem)]"
+          className={`flex flex-col lg:flex-row gap-4 lg:gap-6 bg-paper px-3 sm:px-6 pb-3 sm:pb-6 ${
+            zenMode ? "h-[100dvh] pt-3 sm:pt-6" : "lg:h-[calc(100dvh-4rem)]"
           } overflow-hidden`}
         >
-          <div className="flex-1 flex flex-col min-w-0 bg-sheet lg:rounded-tr-[10px]">
+          <div className="card flex-1 flex flex-col min-w-0 overflow-hidden">
             {/* Toolbar */}
-            <div className="h-14 px-4 sm:px-8 flex items-center justify-between gap-3 shrink-0 text-[13px] text-ink-3">
+            <div className="h-16 px-4 sm:px-6 flex items-center justify-between gap-3 shrink-0 text-[13px] text-ink-3 border-b border-rule">
               <div className="flex items-center gap-3">
                 <div className="seg" role="group" aria-label="Typeface">
                   <button
@@ -86,7 +86,7 @@ export default function Write() {
               </div>
 
               <div className="flex items-center gap-1 sm:gap-2">
-                <span className="hidden sm:inline tabular mr-2">
+                <span className="hidden sm:inline-flex chip tabular mr-2">
                   {wordCount} words · {readingTime} min read
                 </span>
                 <button
@@ -116,7 +116,7 @@ export default function Write() {
                   defaultValue="On Deliberate Practice & Prose Architecture"
                   placeholder="Untitled"
                   aria-label="Title"
-                  className={`w-full bg-transparent border-none outline-none text-[24px] sm:text-[36px] leading-[1.1] font-medium tracking-[-0.02em] placeholder:text-ink-3/60 ${face}`}
+                  className={`w-full bg-transparent border-none outline-none text-[26px] sm:text-[32px] leading-[1.15] font-normal tracking-[-0.02em] placeholder:text-ink-3/60 ${face}`}
                 />
                 <textarea
                   value={text}
@@ -146,11 +146,11 @@ export default function Write() {
               )}
             </div>
 
-            <div className="h-10 px-4 sm:px-8 flex items-center justify-between gap-4 text-[13px] text-ink-3 shrink-0">
+            <div className="h-12 px-4 sm:px-6 flex items-center justify-between gap-4 text-[13px] text-ink-3 shrink-0 border-t border-rule">
               <span className="truncate">3 saved words used in this draft</span>
-              <span className="flex items-center gap-1.5 text-good shrink-0">
-                <CheckCircle size={14} weight="fill" />
-                <span>Saved</span>
+              <span className="tag tag-good shrink-0">
+                <CheckCircle size={13} weight="fill" />
+                Saved
               </span>
             </div>
           </div>

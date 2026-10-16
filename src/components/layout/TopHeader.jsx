@@ -86,7 +86,7 @@ export const StartSessionMenu = ({ compact = false }) => {
 export const TopHeader = ({ title, subtitle, eyebrow, compact = false }) => {
   if (compact) {
     return (
-      <header className="h-16 px-6 lg:px-8 flex items-center justify-between gap-4 bg-paper shrink-0">
+      <header className="h-16 px-4 sm:px-6 flex items-center justify-between gap-4 bg-paper shrink-0">
         <div className="min-w-0 flex items-baseline gap-3">
           <h1 className="font-serif text-[24px] tracking-[-0.015em] truncate">{title}</h1>
           {subtitle && <p className="hidden xl:block text-[14px] text-ink-3 truncate">{subtitle}</p>}
