@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+#
+# Blocks commits that stage a file over the token limit (tokens = bytes / 4).
+# Measures the staged version of each file, not the working tree. Paths listed
+# in .githooks/token-limit-ignore and binary files are skipped.
+
+set -euo pipefail
+
+MAX_TOKENS=5000
+MAX_BYTES=$((MAX_TOKENS * 4))
+
+root=$(git rev-parse --show-toplevel)
+ignore_file="$root/.githooks/token-limit-ignore"
+
+patterns=()
+if [[ -f $ignore_file ]]; then
+  while IFS= read -r line || [[ -n $line ]]; do
+    line="${line%%#*}"
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+    [[ -n $line ]] && patterns+=("$line")
+  done < "$ignore_file"
+fi
+
+ignored() {
+  local pattern
+  for pattern in ${patterns[@]+"${patterns[@]}"}; do
+    # Unquoted on purpose so the pattern is matched as a glob.
+    [[ $1 == $pattern ]] && return 0
+  done
+  return 1
+}
+
+# git reports "-" for added/deleted line counts when it treats a file as binary.
+binary() {
+  [[ $(git diff --cached --numstat -- "$1") == -* ]]
+}
+
+offenders=()
+while IFS= read -r -d '' path; do
+  ignored "$path" && continue
+  bytes=$(git cat-file -s ":$path")
+  (( bytes > MAX_BYTES )) || continue
+  binary "$path" && continue
+  offenders+=("$path|$bytes")
+done < <(git diff --cached --name-only -z --diff-filter=ACMR)
+
+(( ${#offenders[@]} == 0 )) && exit 0
+
+hint() {
+  case $1 in
+    *.jsx|*.tsx)
+      echo "Move each sub-component into its own file next to it (e.g. Page.jsx -> Page/index.jsx + Page/Toolbar.jsx), and pull hooks and helpers into separate modules." ;;
+    *.js|*.ts|*.mjs|*.cjs)
+      echo "Split by responsibility into sibling modules and re-export them from an index file. For data modules, put each dataset in its own file." ;;
+    *.rb)
+      echo "Extract cohesive groups of methods into concerns (app/models/concerns, app/controllers/concerns) or small plain-Ruby objects in app/models. Split test files by behaviour." ;;
+    *.erb|*.jbuilder)
+      echo "Move repeated or self-contained sections into partials and render them." ;;
+    *.yml|*.yaml)
+      echo "Split into smaller files. For an OpenAPI spec, move paths and schemas into separate files and point to them with \$ref." ;;
+    *.json)
+      echo "Split the data into several smaller files (e.g. one per record type) and load them together." ;;
+    *.css)
+      echo "Split into one stylesheet per component or page and import them." ;;
+    *.md)
+      echo "Break it into several documents by topic and link between them." ;;
+    *)
+      echo "Split it into smaller files, each with one clear responsibility." ;;
+  esac
+}
+
+{
+  echo
+  echo "pre-commit: these staged files are over the ${MAX_TOKENS}-token limit (tokens = bytes / 4, limit ${MAX_BYTES} bytes):"
+  echo
+  for entry in "${offenders[@]}"; do
+    path="${entry%|*}"
+    bytes="${entry##*|}"
+    echo "  $path  ~$(( (bytes + 3) / 4 )) tokens ($bytes bytes)"
+    echo "    How to split: $(hint "$path")"
+    echo
+  done
+  cat <<MSG
+How to split a file:
+  1. Find the seams: separate components, classes, groups of related
+     functions, or independent blocks of data.
+  2. Move each piece into its own file, aiming for well under ${MAX_TOKENS}
+     tokens each, and give it a name that says what it holds.
+  3. Update imports, requires and references so the original entry point
+     still works (re-export from an index file if callers depend on it).
+  4. Run the tests and linter, stage the new files, and commit again.
+
+If the file is not written by agents (a lockfile, generated code, vendored
+code), add a glob for it to .githooks/token-limit-ignore instead.
+MSG
+} >&2
+
+exit 1

@@ -1,0 +1,22 @@
+# Files the pre-commit token limit skips because people and tools write them,
+# not agents. One glob per line; `*` also matches `/`. Lines starting with #
+# are comments. Binary files (images, fonts, PDFs) are skipped automatically.
+
+# Lockfiles
+package-lock.json
+*/package-lock.json
+yarn.lock
+pnpm-lock.yaml
+*.lock
+
+# Rails-generated schema dumps (rewritten by `bin/rails db:migrate`)
+api/db/schema.rb
+api/db/*_schema.rb
+api/db/structure.sql
+
+# Build output and vendored code
+dist/*
+*/vendor/*
+*.min.js
+*.min.css
+*.map
