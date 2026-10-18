@@ -1,0 +1,11 @@
+alex:
+  user: alex
+  token: alex-token-0123456789abcdef
+
+sam:
+  user: sam
+  token: sam-token-0123456789abcdef
+
+kim:
+  user: kim
+  token: kim-token-0123456789abcdef

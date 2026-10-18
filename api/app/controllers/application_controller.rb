@@ -1,0 +1,21 @@
+class ApplicationController < ActionController::API
+  include Authentication, Authorization
+
+  before_action { request.format = :json }
+
+  rescue_from ActiveRecord::RecordNotFound do
+    render json: { error: "Not found." }, status: :not_found
+  end
+
+  rescue_from ActiveRecord::RecordInvalid do |error|
+    render json: { errors: error.record.errors.to_hash(true) }, status: :unprocessable_content
+  end
+
+  rescue_from ApplicationAgent::Unavailable do
+    render json: { error: "The writing coach is unavailable right now. Try again in a minute." }, status: :service_unavailable
+  end
+
+  rescue_from ActionController::ParameterMissing do |error|
+    render json: { error: error.message }, status: :bad_request
+  end
+end

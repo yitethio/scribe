@@ -1,0 +1,7 @@
+Hi <%= @user.name %>,
+
+Someone asked to reset the password for your Scribe account. Choose a new one here:
+
+<%= Rails.configuration.x.frontend_url %>/reset-password?token=<%= @user.password_reset_token %>
+
+The link expires in <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>. If you didn't ask for this, you can ignore this email.

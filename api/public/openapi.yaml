@@ -1,0 +1,1770 @@
+openapi: 3.1.0
+info:
+  title: Scribe API
+  version: 1.0.0
+  description: |
+    JSON API for scribe, a deliberate-practice writing coach.
+
+    **Authentication.** Sign up with `POST /registration` or sign in with `POST /session`. Both return a
+    `token`. Send it on every other request as `Authorization: Bearer <token>`.
+
+    **Conventions.**
+    - Creating a resource returns `201 Created` with the resource and a `Location` header.
+    - Updating or deleting returns `204 No Content`. Fetch the resource again to read the new state.
+    - States are records, not flags: resolve a coach issue with `POST /coach_issues/{id}/resolution`,
+      reopen it with `DELETE` on the same path.
+    - Errors are JSON. Validation failures return `422` with an `errors` object keyed by field.
+    - Everything is scoped to the signed-in user. Another user's records return `404`.
+    - Timestamps are ISO 8601 in UTC. Dates are `YYYY-MM-DD`.
+
+    **AI.** Claude checks definitions, coaches drafts and grades challenge passages, revisions and usage
+    sentences. It never rewrites the learner's sentences. Endpoints that only exist for the AI return `503`
+    when Claude is unavailable; the graders fall back to word matching instead.
+
+    **Sample data.** `bin/rails db:seed` loads the frontend's sample data under `demo@scribe.test` /
+    `password123`.
+servers:
+  - url: http://localhost:3000
+    description: Local development
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Profile
+  - name: Skills
+  - name: Vocabulary
+  - name: Book sessions
+  - name: Drafts
+  - name: Coach issues
+  - name: Challenges
+  - name: Revisions
+  - name: Activity
+  - name: Admin
+    description: Shared content for everyone. Requires a user with `admin` set.
+
+paths:
+  /registration:
+    post:
+      tags: [Auth]
+      summary: Sign up
+      operationId: createRegistration
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email_address, password]
+              properties:
+                name: { type: string, example: Alex Rivera }
+                email_address: { type: string, format: email, example: alex@example.com }
+                password: { type: string, minLength: 8, example: correct horse }
+      responses:
+        "201":
+          description: Account created and signed in.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionToken" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /session:
+    post:
+      tags: [Auth]
+      summary: Sign in
+      operationId: createSession
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email_address, password]
+              properties:
+                email_address: { type: string, format: email, example: demo@scribe.test }
+                password: { type: string, example: password123 }
+      responses:
+        "201":
+          description: Signed in.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionToken" }
+        "401":
+          description: Wrong email address or password.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+    delete:
+      tags: [Auth]
+      summary: Sign out
+      description: Ends the session the token belongs to. The token stops working.
+      operationId: destroySession
+      responses:
+        "204": { description: Signed out. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /passwords:
+    post:
+      tags: [Auth]
+      summary: Request a password reset
+      description: |
+        Emails a reset link to the account with this address. The link points at
+        `FRONTEND_URL/reset-password?token=...` and expires after 15 minutes. Always returns `202`, so the
+        response doesn't reveal whether an account exists.
+      operationId: createPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email_address]
+              properties:
+                email_address: { type: string, format: email, example: demo@scribe.test }
+      responses:
+        "202": { description: "If the account exists, a reset email is on its way." }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /passwords/{token}:
+    patch:
+      tags: [Auth]
+      summary: Reset the password
+      description: |
+        Sets a new password with the token from the reset email. Signs out every session, so sign in again
+        afterwards. A token works once.
+      operationId: updatePassword
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: The token from the reset email.
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string, minLength: 8, example: correct horse }
+      responses:
+        "204": { description: Password changed. }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "422":
+          description: The token is invalid or expired (`error`), or the password is too short (`errors`).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - { $ref: "#/components/schemas/Error" }
+                  - { $ref: "#/components/schemas/ValidationErrors" }
+
+  /profile:
+    get:
+      tags: [Profile]
+      summary: Show the signed-in user's profile and stats
+      description: Stats are computed from the activity log and vocabulary on every request.
+      operationId: showProfile
+      responses:
+        "200":
+          description: The profile.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    patch:
+      tags: [Profile]
+      summary: Update the profile
+      operationId: updateProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProfileInput" }
+      responses:
+        "204": { description: Updated. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /skills:
+    get:
+      tags: [Skills]
+      summary: List skills
+      operationId: listSkills
+      responses:
+        "200":
+          description: The user's skills.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Skill" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /skills/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Skills]
+      summary: Show a skill
+      operationId: showSkill
+      responses:
+        "200":
+          description: The skill.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Skill" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Skills]
+      summary: Update a skill
+      description: Changing the score keeps the old score, so `change` shows the movement.
+      operationId: updateSkill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                score: { type: integer, minimum: 0, maximum: 100 }
+      responses:
+        "204": { description: Updated. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /skills/{skill_id}/focus:
+    parameters:
+      - $ref: "#/components/parameters/SkillId"
+    post:
+      tags: [Skills]
+      summary: Make this the focused skill
+      description: The user has one focused skill. Focusing a skill unfocuses the previous one.
+      operationId: focusSkill
+      responses:
+        "204": { description: Focused. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /vocabulary_words:
+    get:
+      tags: [Vocabulary]
+      summary: List vocabulary words
+      description: Newest first.
+      operationId: listVocabularyWords
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/VocabularyStatus" }
+        - name: q
+          in: query
+          description: Case-insensitive substring match on the word.
+          schema: { type: string }
+      responses:
+        "200":
+          description: The words.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/VocabularyWord" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Vocabulary]
+      summary: Add a word
+      operationId: createVocabularyWord
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/VocabularyWordInput"
+                - required: [word]
+      responses:
+        "201":
+          description: Added. A word the user already has returns 422.
+          headers:
+            Location: { $ref: "#/components/headers/Location" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VocabularyWord" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /vocabulary_words/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Vocabulary]
+      summary: Show a word
+      operationId: showVocabularyWord
+      responses:
+        "200":
+          description: The word.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VocabularyWord" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Vocabulary]
+      summary: Update a word
+      operationId: updateVocabularyWord
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VocabularyWordInput" }
+      responses:
+        "204": { description: Updated. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      tags: [Vocabulary]
+      summary: Delete a word
+      description: Also removes its reviews and takes it out of any book session.
+      operationId: destroyVocabularyWord
+      responses:
+        "204": { description: Deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /vocabulary_words/{vocabulary_word_id}/reviews:
+    parameters:
+      - $ref: "#/components/parameters/VocabularyWordId"
+    get:
+      tags: [Vocabulary]
+      summary: List a word's practice reviews
+      description: Newest first.
+      operationId: listReviews
+      responses:
+        "200":
+          description: The reviews.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Review" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [Vocabulary]
+      summary: Record a practice review
+      description: |
+        Records one spaced-practice drill and updates the word's counters.
+
+        - `usage` drills send the user's `sentence`. Claude judges whether it uses the word correctly and
+          explains why in `feedback`, without rewriting the sentence. If Claude is unavailable, the sentence
+          is correct when it contains the word. A correct sentence becomes the word's `context_sentence`.
+        - Other kinds are graded by the client, so send `correct`.
+      operationId: createReview
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind]
+              properties:
+                kind: { $ref: "#/components/schemas/ReviewKind" }
+                sentence: { type: string, description: Required for `usage`. }
+                correct: { type: boolean, description: Required for every kind except `usage`. }
+            examples:
+              usage:
+                value: { kind: usage, sentence: Careless phrasing can undermine an argument. }
+              selection:
+                value: { kind: selection, correct: true }
+      responses:
+        "201":
+          description: Recorded. Includes the updated word.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Review"
+                  - type: object
+                    required: [vocabulary_word]
+                    properties:
+                      vocabulary_word: { $ref: "#/components/schemas/VocabularyWord" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /vocabulary_words/{vocabulary_word_id}/definition_check:
+    parameters:
+      - $ref: "#/components/parameters/VocabularyWordId"
+    post:
+      tags: [Vocabulary]
+      summary: Check the learner's definition
+      description: |
+        Claude compares the learner's `personal_definition` with the word's meaning and sets
+        `definition_verdict` and `definition_feedback`. The feedback points at what the definition got right
+        and what it missed, without rewriting it. The first check also fills in `part_of_speech`,
+        `definition`, `example`, `collocations` and `synonyms`; later checks leave those as they are.
+      operationId: checkDefinition
+      responses:
+        "201":
+          description: Checked. The updated word.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VocabularyWord" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "503": { $ref: "#/components/responses/CoachUnavailable" }
+
+  /book_sessions:
+    get:
+      tags: [Book sessions]
+      summary: List book sessions
+      description: Most recently updated first.
+      operationId: listBookSessions
+      responses:
+        "200":
+          description: The sessions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/BookSession" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Book sessions]
+      summary: Start a book session
+      operationId: createBookSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BookSessionInput"
+                - required: [book_title]
+      responses:
+        "201":
+          description: Started.
+          headers:
+            Location: { $ref: "#/components/headers/Location" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BookSession" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /book_sessions/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Book sessions]
+      summary: Show a book session
+      operationId: showBookSession
+      responses:
+        "200":
+          description: The session.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BookSession" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Book sessions]
+      summary: Update a book session
+      description: Use this to save the page, zoom, timer and rewriting draft as the user works.
+      operationId: updateBookSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BookSessionInput" }
+      responses:
+        "204": { description: Updated. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      tags: [Book sessions]
+      summary: Delete a book session
+      description: Captured words stay in the vocabulary.
+      operationId: destroyBookSession
+      responses:
+        "204": { description: Deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /book_sessions/{book_session_id}/pages:
+    parameters:
+      - $ref: "#/components/parameters/BookSessionId"
+    get:
+      tags: [Book sessions]
+      summary: List the book's stored pages
+      operationId: listPages
+      responses:
+        "200":
+          description: Pages in order.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Page" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /book_sessions/{book_session_id}/pages/{number}:
+    parameters:
+      - $ref: "#/components/parameters/BookSessionId"
+      - name: number
+        in: path
+        required: true
+        schema: { type: integer, minimum: 1 }
+    get:
+      tags: [Book sessions]
+      summary: Show a page by number
+      operationId: showPage
+      responses:
+        "200":
+          description: The page.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Page" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Book sessions]
+      summary: Store a page's text
+      description: Creates the page if it doesn't exist yet, otherwise replaces it. `PATCH` works the same way.
+      operationId: putPage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chapter: { type: string }
+                subhead: { type: string }
+                paragraphs:
+                  type: array
+                  items: { type: string }
+      responses:
+        "204": { description: Stored. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /book_sessions/{book_session_id}/words:
+    parameters:
+      - $ref: "#/components/parameters/BookSessionId"
+    get:
+      tags: [Book sessions]
+      summary: List words captured in this session
+      description: In the order they were captured.
+      operationId: listSessionWords
+      responses:
+        "200":
+          description: The captured words.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/VocabularyWord" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [Book sessions]
+      summary: Capture a word while reading
+      description: |
+        Adds the word to this session. If the user doesn't have the word yet, it's also added to their
+        vocabulary with the given context sentence. Capturing the same word twice is harmless.
+      operationId: captureSessionWord
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [word]
+              properties:
+                word: { type: string, example: precipice }
+                context_sentence: { type: string, example: The knight approached the precipice overlooking the valley. }
+      responses:
+        "201":
+          description: Captured. Returns the vocabulary word.
+          headers:
+            Location: { $ref: "#/components/headers/Location" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VocabularyWord" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /book_sessions/{book_session_id}/words/{id}:
+    parameters:
+      - $ref: "#/components/parameters/BookSessionId"
+      - name: id
+        in: path
+        required: true
+        description: The vocabulary word's id.
+        schema: { type: integer }
+    delete:
+      tags: [Book sessions]
+      summary: Remove a word from this session
+      description: The word stays in the vocabulary.
+      operationId: removeSessionWord
+      responses:
+        "204": { description: Removed. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /drafts:
+    get:
+      tags: [Drafts]
+      summary: List drafts
+      description: Most recently updated first.
+      operationId: listDrafts
+      responses:
+        "200":
+          description: The drafts.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Draft" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Drafts]
+      summary: Create a draft
+      operationId: createDraft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/DraftInput"
+                - required: [title]
+      responses:
+        "201":
+          description: Created.
+          headers:
+            Location: { $ref: "#/components/headers/Location" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Draft" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /drafts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Drafts]
+      summary: Show a draft
+      operationId: showDraft
+      responses:
+        "200":
+          description: The draft.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Draft" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Drafts]
+      summary: Update a draft or its coach settings
+      operationId: updateDraft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DraftInput" }
+      responses:
+        "204": { description: Updated. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      tags: [Drafts]
+      summary: Delete a draft and its coach issues
+      operationId: destroyDraft
+      responses:
+        "204": { description: Deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /drafts/{draft_id}/coaching:
+    parameters:
+      - $ref: "#/components/parameters/DraftId"
+    post:
+      tags: [Coach issues]
+      summary: Coach the draft
+      description: |
+        Claude reads the draft at its `coach_level` and replaces the open coach issues with what it finds.
+        Resolved issues stay. Every issue quotes the learner's exact words in `phrase`; the coach asks
+        questions and gives hints but never rewrites the learner's sentences, so `sample_fix` is a model
+        sentence on a different subject. Returns all of the draft's issues, oldest first.
+      operationId: coachDraft
+      responses:
+        "201":
+          description: Coached.
+          headers:
+            Location: { $ref: "#/components/headers/Location" }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CoachIssue" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "503": { $ref: "#/components/responses/CoachUnavailable" }
+
+  /drafts/{draft_id}/coach_issues:
+    parameters:
+      - $ref: "#/components/parameters/DraftId"
+    get:
+      tags: [Coach issues]
+      summary: List a draft's coach issues
+      description: Oldest first.
+      operationId: listCoachIssues
+      parameters:
+        - name: resolved
+          in: query
+          description: Only resolved (`true`) or only open (`false`) issues.
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: The issues.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CoachIssue" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [Coach issues]
+      summary: Flag an issue in a draft
+      description: For the coach (or the user) to point at a phrase. The coach never rewrites the user's text.
+      operationId: createCoachIssue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/CoachIssueInput"
+                - required: [phrase, category]
+      responses:
+        "201":
+          description: Created.
+          headers:
+            Location: { $ref: "#/components/headers/Location" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CoachIssue" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /coach_issues/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Coach issues]
+      summary: Show a coach issue
+      operationId: showCoachIssue
+      responses:
+        "200":
+          description: The issue.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CoachIssue" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Coach issues]
+      summary: Update a coach issue
+      operationId: updateCoachIssue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CoachIssueInput" }
+      responses:
+        "204": { description: Updated. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      tags: [Coach issues]
+      summary: Delete a coach issue
+      operationId: destroyCoachIssue
+      responses:
+        "204": { description: Deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /coach_issues/{coach_issue_id}/resolution:
+    parameters:
+      - name: coach_issue_id
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Coach issues]
+      summary: Resolve an issue
+      description: Optionally keep the user's own revision. Resolving twice keeps the first resolution.
+      operationId: resolveCoachIssue
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                revision: { type: string, example: Technology has a big influence on the way people communicate }
+      responses:
+        "201":
+          description: Resolved. Returns the issue.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CoachIssue" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Coach issues]
+      summary: Reopen an issue
+      operationId: reopenCoachIssue
+      responses:
+        "204": { description: Reopened. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /challenges:
+    get:
+      tags: [Challenges]
+      summary: List challenges
+      description: Newest first. Challenges are shared by all users and managed under `/admin/challenges`.
+      operationId: listChallenges
+      parameters:
+        - name: current
+          in: query
+          description: Only challenges open right now.
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: The challenges.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Challenge" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /challenges/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Challenges]
+      summary: Show a challenge
+      operationId: showChallenge
+      responses:
+        "200":
+          description: The challenge, with the signed-in user's submission if any.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Challenge" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /challenges/{challenge_id}/submission:
+    parameters:
+      - name: challenge_id
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Challenges]
+      summary: Show the signed-in user's submission
+      operationId: showSubmission
+      responses:
+        "200":
+          description: The submission.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Submission" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [Challenges]
+      summary: Submit a passage
+      description: |
+        Claude grades how the passage uses each challenge word and logs a challenge activity. If Claude is
+        unavailable, the passage is scored by matching words instead (a word counts when the passage
+        contains it or a form of it, such as "undermined") and `graded` is false. Submitting again replaces
+        the passage and grades it again. Only open challenges accept submissions.
+      operationId: submitChallenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [passage]
+              properties:
+                passage: { type: string }
+      responses:
+        "201":
+          description: Submitted and scored.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Submission" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: The challenge is closed, or the passage is invalid.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Error"
+                  - $ref: "#/components/schemas/ValidationErrors"
+
+  /revisions:
+    get:
+      tags: [Revisions]
+      summary: List revision lab exercises
+      description: Shared by all users. `mastered` is per user.
+      operationId: listRevisions
+      parameters:
+        - name: mastered
+          in: query
+          description: Only exercises the user has (`true`) or hasn't (`false`) solved.
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: The exercises.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Revision" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /revisions/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Revisions]
+      summary: Show an exercise
+      operationId: showRevision
+      responses:
+        "200":
+          description: The exercise.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Revision" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /revisions/{revision_id}/attempts:
+    parameters:
+      - name: revision_id
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Revisions]
+      summary: List the signed-in user's attempts
+      description: Newest first.
+      operationId: listAttempts
+      responses:
+        "200":
+          description: The attempts.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Attempt" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [Revisions]
+      summary: Submit a rewrite
+      description: |
+        Claude judges whether the rewrite fixes the focus segment, accepting any fix that works, and
+        explains why without rewriting it. If Claude is unavailable, the rewrite is correct when it
+        contains the exercise's expected phrase (case-insensitive). Logs a revision activity.
+      operationId: createAttempt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, example: Technology has a big influence on the way people communicate. }
+      responses:
+        "201":
+          description: Graded.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Attempt" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /activities:
+    get:
+      tags: [Activity]
+      summary: List recent activity
+      description: Newest first. Challenge submissions and revision attempts are logged automatically.
+      operationId: listActivities
+      parameters:
+        - name: kind
+          in: query
+          schema: { $ref: "#/components/schemas/ActivityKind" }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        "200":
+          description: The activity log.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Activity" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Activity]
+      summary: Log an activity
+      description: For practice the client times itself, such as a book session or a writing sprint. Counts toward stats and streaks.
+      operationId: createActivity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind, title]
+              properties:
+                kind: { $ref: "#/components/schemas/ActivityKind" }
+                title: { type: string, example: The Craft of Prose — Page 24 }
+                status: { type: string, example: Active Session }
+                word_count: { type: integer, minimum: 0 }
+                vocabulary_added: { type: integer, minimum: 0 }
+                duration_minutes: { type: integer, minimum: 0 }
+                occurred_at: { type: string, format: date-time, description: Defaults to now. }
+      responses:
+        "201":
+          description: Logged.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Activity" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /admin/challenges:
+    get:
+      tags: [Admin]
+      summary: List challenges
+      description: Newest first. Deleting a challenge deletes its submissions.
+      operationId: listAdminChallenges
+      responses:
+        "200":
+          description: The challenges.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AdminChallenge" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [Admin]
+      summary: Create a challenge
+      operationId: createAdminChallenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/ChallengeInput"
+                - required: [title, theme, words, target_count, starts_at, due_at]
+      responses:
+        "201":
+          description: Created.
+          headers:
+            Location: { $ref: "#/components/headers/Location" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminChallenge" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /admin/challenges/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Admin]
+      summary: Show a challenge
+      operationId: showAdminChallenge
+      responses:
+        "200":
+          description: The challenge.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminChallenge" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Admin]
+      summary: Update a challenge
+      operationId: updateAdminChallenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChallengeInput" }
+      responses:
+        "204": { description: Updated. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      tags: [Admin]
+      summary: Delete a challenge
+      operationId: destroyAdminChallenge
+      responses:
+        "204": { description: Deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /admin/revisions:
+    get:
+      tags: [Admin]
+      summary: List revision exercises
+      description: Every exercise in the revision lab, with the expected answer. Deleting one deletes its attempts.
+      operationId: listAdminRevisions
+      responses:
+        "200":
+          description: The revision exercises.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AdminRevision" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [Admin]
+      summary: Create a revision exercise
+      operationId: createAdminRevision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/RevisionInput"
+                - required: [original, focus_segment, category, prompt, expected_keyword]
+      responses:
+        "201":
+          description: Created.
+          headers:
+            Location: { $ref: "#/components/headers/Location" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminRevision" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /admin/revisions/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Admin]
+      summary: Show a revision exercise
+      operationId: showAdminRevision
+      responses:
+        "200":
+          description: The revision exercise.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminRevision" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Admin]
+      summary: Update a revision exercise
+      operationId: updateAdminRevision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RevisionInput" }
+      responses:
+        "204": { description: Updated. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      tags: [Admin]
+      summary: Delete a revision exercise
+      operationId: destroyAdminRevision
+      responses:
+        "204": { description: Deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: The token from `POST /session` or `POST /registration`.
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    SkillId:
+      name: skill_id
+      in: path
+      required: true
+      schema: { type: integer }
+    VocabularyWordId:
+      name: vocabulary_word_id
+      in: path
+      required: true
+      schema: { type: integer }
+    BookSessionId:
+      name: book_session_id
+      in: path
+      required: true
+      schema: { type: integer }
+    DraftId:
+      name: draft_id
+      in: path
+      required: true
+      schema: { type: integer }
+
+  headers:
+    Location:
+      description: URL of the created resource.
+      schema: { type: string, format: uri }
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid bearer token.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: No such record for this user.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    BadRequest:
+      description: A required parameter is missing.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ValidationFailed:
+      description: The record is invalid.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ValidationErrors" }
+    RateLimited:
+      description: Too many attempts. Try again in a few minutes.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    CoachUnavailable:
+      description: The AI provider couldn't answer (no API key, an outage, or a rate limit). Try again later.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: Only admins can do that.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+
+    ValidationErrors:
+      type: object
+      required: [errors]
+      properties:
+        errors:
+          type: object
+          description: Full error messages keyed by field.
+          additionalProperties:
+            type: array
+            items: { type: string }
+          example: { email_address: ["Email address has already been taken"] }
+
+    User:
+      type: object
+      required: [id, name, email_address, admin]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email_address: { type: string, format: email }
+        admin: { type: boolean, description: Admins can manage challenges and revision exercises under `/admin`. }
+
+    SessionToken:
+      type: object
+      required: [token, user]
+      properties:
+        token: { type: string, description: "Send as `Authorization: Bearer <token>`." }
+        user: { $ref: "#/components/schemas/User" }
+
+    Profile:
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          required: [role_title, level, weekly_goal, focused_skill_id, focus, stats]
+          properties:
+            role_title: { type: [string, "null"], example: Level IV Stylist • Deliberate Learner }
+            level: { type: [string, "null"], example: "Level IV: Cohesive Stylist" }
+            weekly_goal: { type: integer, description: Words per week. }
+            focused_skill_id: { type: [integer, "null"] }
+            focus:
+              type: object
+              required: [title, description, recommendation]
+              properties:
+                title: { type: [string, "null"] }
+                description: { type: [string, "null"] }
+                recommendation: { type: [string, "null"] }
+            stats:
+              type: object
+              required: [words_today, words_this_week, words_this_month, streak_days, streak_history,
+                sessions_completed_count, vocabulary_learned_count, vocabulary_retention_rate]
+              properties:
+                words_today: { type: integer }
+                words_this_week: { type: integer }
+                words_this_month: { type: integer }
+                streak_days:
+                  type: integer
+                  description: Consecutive days with activity, ending today (or yesterday if nothing is logged today yet).
+                streak_history:
+                  type: array
+                  description: The last 14 days, oldest first. True when there was activity that day.
+                  items: { type: boolean }
+                  minItems: 14
+                  maxItems: 14
+                sessions_completed_count: { type: integer, description: Activities logged. }
+                vocabulary_learned_count: { type: integer }
+                vocabulary_retention_rate:
+                  type: [integer, "null"]
+                  description: Percent of correct uses across all words. Null before any use.
+
+    ProfileInput:
+      type: object
+      properties:
+        name: { type: string }
+        role_title: { type: string }
+        level: { type: string }
+        weekly_goal: { type: integer, minimum: 1 }
+        focus_title: { type: string }
+        focus_description: { type: string }
+        focus_recommendation: { type: string }
+
+    Skill:
+      type: object
+      required: [id, key, name, score, change, focused]
+      properties:
+        id: { type: integer }
+        key: { type: string, example: cohesion }
+        name: { type: string, example: Cohesion }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        change: { type: integer, description: Points gained or lost since the last score update. }
+        focused: { type: boolean }
+
+    VocabularyStatus:
+      type: string
+      enum: [new, learning, practicing, mastered]
+
+    VocabularyWordInput:
+      type: object
+      properties:
+        word: { type: string, description: Stored lowercase and unique per user. }
+        part_of_speech:
+          type: string
+          enum: [noun, verb, adjective, adverb, phrase, other]
+          description: Case-insensitive on input.
+        personal_definition: { type: string, description: The user's own definition, written before seeing the real one. }
+        definition: { type: string }
+        example: { type: string }
+        context_sentence: { type: string }
+        collocations:
+          type: array
+          items: { type: string }
+        synonyms:
+          type: array
+          items: { type: string }
+        status: { $ref: "#/components/schemas/VocabularyStatus" }
+        confidence: { type: string, enum: [low, medium, high] }
+        learned_on: { type: string, format: date, description: Defaults to today. }
+
+    VocabularyWord:
+      type: object
+      required: [id, word, part_of_speech, personal_definition, definition, example, context_sentence, collocations,
+        synonyms, status, confidence, uses_count, correct_uses_count, retention_rate, learned_on, last_reviewed_at,
+        definition_verdict, definition_feedback, definition_checked_at, created_at, updated_at]
+      properties:
+        id: { type: integer }
+        word: { type: string, example: mitigate }
+        part_of_speech: { type: string, example: verb }
+        personal_definition: { type: [string, "null"] }
+        definition: { type: [string, "null"] }
+        example: { type: [string, "null"] }
+        context_sentence: { type: [string, "null"] }
+        collocations:
+          type: array
+          items: { type: string }
+        synonyms:
+          type: array
+          items: { type: string }
+        status: { $ref: "#/components/schemas/VocabularyStatus" }
+        confidence: { type: string, enum: [low, medium, high] }
+        uses_count: { type: integer }
+        correct_uses_count: { type: integer }
+        retention_rate: { type: [integer, "null"], description: Percent of correct uses. Null before any use. }
+        learned_on: { type: string, format: date }
+        last_reviewed_at: { type: [string, "null"], format: date-time }
+        definition_verdict:
+          type: [string, "null"]
+          enum: [accurate, partial, inaccurate, null]
+          description: How close `personal_definition` came, from the last definition check.
+        definition_feedback: { type: [string, "null"], description: Claude's note on the learner's definition. }
+        definition_checked_at: { type: [string, "null"], format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ReviewKind:
+      type: string
+      enum: [recall, usage, selection, transformation]
+
+    Review:
+      type: object
+      required: [id, vocabulary_word_id, kind, sentence, correct, feedback, created_at]
+      properties:
+        id: { type: integer }
+        vocabulary_word_id: { type: integer }
+        kind: { $ref: "#/components/schemas/ReviewKind" }
+        sentence: { type: [string, "null"] }
+        correct: { type: boolean }
+        feedback:
+          type: [string, "null"]
+          description: Claude's note on a `usage` sentence. Null for other kinds, or when Claude was unavailable.
+        created_at: { type: string, format: date-time }
+
+    BookSessionInput:
+      type: object
+      properties:
+        book_title: { type: string }
+        author: { type: string }
+        cover_url: { type: string }
+        filename: { type: string }
+        current_page: { type: integer, minimum: 1 }
+        total_pages: { type: integer }
+        zoom_level: { type: integer, minimum: 25, maximum: 400 }
+        words_rewritten: { type: integer, minimum: 0 }
+        duration_seconds: { type: integer, minimum: 0 }
+        draft_text: { type: string, description: The user's rewriting of the passage. }
+
+    BookSession:
+      type: object
+      required: [id, book_title, author, cover_url, filename, current_page, total_pages, zoom_level, words_rewritten,
+        duration_seconds, draft_text, words, created_at, updated_at]
+      properties:
+        id: { type: integer }
+        book_title: { type: string }
+        author: { type: [string, "null"] }
+        cover_url: { type: [string, "null"] }
+        filename: { type: [string, "null"] }
+        current_page: { type: integer }
+        total_pages: { type: [integer, "null"] }
+        zoom_level: { type: integer }
+        words_rewritten: { type: integer }
+        duration_seconds: { type: integer }
+        draft_text: { type: [string, "null"] }
+        words:
+          type: array
+          description: Words captured in this session, in capture order.
+          items: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    Page:
+      type: object
+      required: [number, chapter, subhead, paragraphs]
+      properties:
+        number: { type: integer }
+        chapter: { type: [string, "null"] }
+        subhead: { type: [string, "null"] }
+        paragraphs:
+          type: array
+          items: { type: string }
+
+    DraftInput:
+      type: object
+      properties:
+        title: { type: string }
+        body: { type: string }
+        coach_enabled: { type: boolean }
+        coach_level: { type: string, enum: [minimal, guided, teacher, review] }
+
+    Draft:
+      type: object
+      required: [id, title, body, word_count, coach_enabled, coach_level, unresolved_issues_count, created_at, updated_at]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        body: { type: [string, "null"] }
+        word_count: { type: integer }
+        coach_enabled: { type: boolean }
+        coach_level: { type: string, enum: [minimal, guided, teacher, review] }
+        unresolved_issues_count: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    CoachIssueInput:
+      type: object
+      properties:
+        phrase: { type: string, description: The exact text in the draft the issue points at. }
+        category: { type: string, example: Word choice / Collocation }
+        category_color: { type: string, example: "#D97706" }
+        badge: { type: string, example: Collocation }
+        summary: { type: string }
+        question: { type: string, description: A question that nudges the writer to fix it themselves. }
+        hint: { type: string }
+        explanation: { type: string }
+        sample_fix: { type: string }
+
+    CoachIssue:
+      type: object
+      required: [id, draft_id, phrase, category, category_color, badge, summary, question, hint, explanation,
+        sample_fix, resolved, resolution]
+      properties:
+        id: { type: integer }
+        draft_id: { type: integer }
+        phrase: { type: string }
+        category: { type: string }
+        category_color: { type: [string, "null"] }
+        badge: { type: [string, "null"] }
+        summary: { type: [string, "null"] }
+        question: { type: [string, "null"] }
+        hint: { type: [string, "null"] }
+        explanation: { type: [string, "null"] }
+        sample_fix: { type: [string, "null"] }
+        resolved: { type: boolean }
+        resolution:
+          oneOf:
+            - type: "null"
+            - type: object
+              required: [revision, created_at]
+              properties:
+                revision: { type: [string, "null"] }
+                created_at: { type: string, format: date-time }
+
+    Challenge:
+      type: object
+      required: [id, title, theme, words, target_count, starts_at, due_at, open, submission]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        theme: { type: string }
+        words:
+          type: array
+          items: { type: string }
+        target_count: { type: integer, description: How many of the words a passage must use to pass. }
+        starts_at: { type: string, format: date-time }
+        due_at: { type: string, format: date-time }
+        open: { type: boolean }
+        submission:
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/Submission"
+
+    Submission:
+      type: object
+      required: [id, challenge_id, passage, word_count, rubric, used_words, scored_words, passed, graded, created_at,
+        updated_at]
+      properties:
+        id: { type: integer }
+        challenge_id: { type: integer }
+        passage: { type: string }
+        word_count: { type: integer }
+        rubric:
+          type: array
+          description: |
+            One entry per challenge word. When Claude grades the passage, entries also say whether the word is
+            used correctly and naturally, with a note to the learner that never rewrites their sentences.
+            Without Claude, entries only say whether the word appears.
+          items:
+            type: object
+            required: [word, used]
+            properties:
+              word: { type: string }
+              used: { type: boolean }
+              correct: { type: boolean }
+              natural: { type: string, enum: [natural, awkward, unnatural] }
+              note: { type: [string, "null"] }
+        used_words:
+          type: array
+          items: { type: string }
+        scored_words:
+          type: array
+          description: Words used correctly. Until Claude grades the passage, every used word counts.
+          items: { type: string }
+        passed: { type: boolean, description: "`scored_words` reaches the challenge's `target_count`." }
+        graded: { type: boolean, description: Whether Claude graded the passage. }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    Revision:
+      type: object
+      description: The expected answer is never sent to the client.
+      required: [id, original, focus_segment, category, prompt, hint, mastered]
+      properties:
+        id: { type: integer }
+        original: { type: string }
+        focus_segment: { type: string }
+        category: { type: string }
+        prompt: { type: string }
+        hint: { type: [string, "null"] }
+        mastered: { type: boolean }
+
+    ChallengeInput:
+      type: object
+      properties:
+        title: { type: string, example: Weekly Writing Challenge }
+        theme: { type: string, example: How technology is changing the way people learn. }
+        words:
+          type: array
+          items: { type: string }
+          example: [influence, facilitate, undermine, mitigate]
+        target_count: { type: integer, minimum: 1, example: 3 }
+        starts_at: { type: string, format: date-time }
+        due_at: { type: string, format: date-time }
+
+    AdminChallenge:
+      type: object
+      required: [id, title, theme, words, target_count, starts_at, due_at, open, submissions_count, created_at, updated_at]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        theme: { type: string }
+        words:
+          type: array
+          items: { type: string }
+        target_count: { type: integer }
+        starts_at: { type: string, format: date-time }
+        due_at: { type: string, format: date-time }
+        open: { type: boolean }
+        submissions_count: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    RevisionInput:
+      type: object
+      properties:
+        original: { type: string, example: Technology has a big influence to the way people communicate. }
+        focus_segment: { type: string, example: influence to }
+        category: { type: string, example: Collocation / Preposition }
+        prompt: { type: string, example: Can you rewrite this sentence to fix the preposition? }
+        expected_keyword:
+          type: string
+          example: influence on
+          description: |
+            A phrase one correct revision contains. Claude treats it as a reference answer; without Claude, a
+            revision must contain it to be correct.
+        hint: { type: [string, "null"] }
+        explanation: { type: [string, "null"], description: Shown when an attempt is correct. }
+
+    AdminRevision:
+      type: object
+      required: [id, original, focus_segment, category, prompt, expected_keyword, hint, explanation, attempts_count, created_at, updated_at]
+      properties:
+        id: { type: integer }
+        original: { type: string }
+        focus_segment: { type: string }
+        category: { type: string }
+        prompt: { type: string }
+        expected_keyword: { type: string }
+        hint: { type: [string, "null"] }
+        explanation: { type: [string, "null"] }
+        attempts_count: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    Attempt:
+      type: object
+      required: [id, revision_id, text, correct, feedback, created_at]
+      properties:
+        id: { type: integer }
+        revision_id: { type: integer }
+        text: { type: string }
+        correct: { type: boolean }
+        feedback:
+          type: [string, "null"]
+          description: |
+            Claude's note on the revision. Without Claude, the exercise's explanation when correct,
+            otherwise its hint.
+        created_at: { type: string, format: date-time }
+
+    ActivityKind:
+      type: string
+      enum: [book_session, challenge, writing, revision]
+
+    Activity:
+      type: object
+      required: [id, kind, title, status, word_count, vocabulary_added, duration_minutes, occurred_at, subject_type, subject_id]
+      properties:
+        id: { type: integer }
+        kind: { $ref: "#/components/schemas/ActivityKind" }
+        title: { type: string }
+        status: { type: [string, "null"] }
+        word_count: { type: integer }
+        vocabulary_added: { type: integer }
+        duration_minutes: { type: integer }
+        occurred_at: { type: string, format: date-time }
+        subject_type:
+          type: [string, "null"]
+          description: What logged it automatically, such as `Challenge::Submission`.
+        subject_id: { type: [integer, "null"] }

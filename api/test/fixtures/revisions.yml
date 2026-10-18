@@ -1,0 +1,17 @@
+influence_to:
+  original: Technology has a big influence to the way people communicate.
+  focus_segment: influence to
+  category: Collocation / Preposition
+  prompt: Can you rewrite this sentence to fix the preposition?
+  expected_keyword: influence on
+  hint: "Remember: 'influence' naturally takes 'on'."
+  explanation: You fixed the preposition!
+
+due_to:
+  original: Due to the fact that the author did not revise the manuscript, errors remained.
+  focus_segment: Due to the fact that
+  category: Clarity & Conciseness
+  prompt: Can you express this same idea directly without the 5-word filler?
+  expected_keyword: because
+  hint: Try beginning with 'Because' or 'Since'.
+  explanation: Excellent revision!

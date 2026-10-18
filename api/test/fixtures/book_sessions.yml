@@ -1,0 +1,13 @@
+craft_of_prose:
+  user: alex
+  book_title: "The Craft of Prose: Guide to Elegant Writing"
+  author: Eleanor Vance
+  filename: craft_of_prose_fourth_edition.pdf
+  current_page: 24
+  total_pages: 312
+  words_rewritten: 1284
+  duration_seconds: 2535
+
+sam_reading:
+  user: sam
+  book_title: Another Book
