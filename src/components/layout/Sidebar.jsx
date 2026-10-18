@@ -1,184 +1,221 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { NavLink, Link } from "react-router-dom";
 import {
-  LayoutDashboard,
-  PenLine,
+  SquaresFour,
+  PencilSimpleLine,
   BookOpen,
-  Library,
   Trophy,
-  RefreshCw,
-  TrendingUp,
-  UserCheck,
-  Flame,
-  PlusCircle,
-  Sparkles,
-  RotateCcw
-} from "lucide-react";
+  ArrowsClockwise,
+  BookmarkSimple,
+  TrendUp,
+  IdentificationCard,
+  Plus,
+  CaretUpDown,
+  ArrowCounterClockwise,
+  X
+} from "@phosphor-icons/react";
 import { useScribe } from "../../store";
 
-const navItems = [
-  { path: "/", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/write", label: "Write", icon: PenLine, badge: "Coach" },
-  { path: "/book-session", label: "Book Session", icon: BookOpen, badge: "PDF Split" },
-  { path: "/vocabulary", label: "Vocabulary", icon: Library, countKey: "vocab" },
-  { path: "/challenges", label: "Challenges", icon: Trophy, badge: "Active" },
-  { path: "/revision-mode", label: "Revision Mode", icon: RefreshCw },
-  { path: "/progress", label: "Progress", icon: TrendingUp },
-  { path: "/profile", label: "Writing Profile", icon: UserCheck },
+const navGroups = [
+  {
+    items: [{ path: "/", label: "Dashboard", icon: SquaresFour }]
+  },
+  {
+    label: "Practice",
+    items: [
+      { path: "/write", label: "Write", icon: PencilSimpleLine },
+      { path: "/book-session", label: "Book session", icon: BookOpen },
+      { path: "/challenges", label: "Challenges", icon: Trophy },
+      { path: "/revision-mode", label: "Revision lab", icon: ArrowsClockwise }
+    ]
+  },
+  {
+    label: "You",
+    items: [
+      { path: "/vocabulary", label: "Vocabulary", icon: BookmarkSimple, countKey: "vocab" },
+      { path: "/progress", label: "Progress", icon: TrendUp },
+      { path: "/profile", label: "Writing profile", icon: IdentificationCard }
+    ]
+  }
 ];
 
-export const Sidebar = ({ onOpenCaptureModal }) => {
-  const { state, resetToDefaults } = useScribe();
-  const { user, vocabulary } = state;
+export const Wordmark = ({ className = "" }) => (
+  <Link to="/" className={`inline-flex items-center gap-2.5 ${className}`}>
+    <PencilSimpleLine size={26} className="text-pen" />
+    <span className="font-serif text-[28px] leading-none tracking-[-0.02em] text-ink">Scribe</span>
+  </Link>
+);
+
+const initials = (name) =>
+  name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+const AccountMenu = ({ onNavigate }) => {
+  const { resetToDefaults } = useScribe();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false);
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   return (
-    <aside className="w-64 bg-[#F5F2EB] border-r border-[#E8E2D8] flex flex-col h-screen select-none shrink-0 sticky top-0">
-      {/* Brand Header */}
-      <div className="p-5 border-b border-[#E8E2D8]/80 flex items-center justify-between">
-        <NavLink to="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg bg-[#1F2E3D] text-[#FAF8F5] flex items-center justify-center shadow-xs group-hover:bg-[#15202B] transition-colors">
-            <span className="font-serif font-bold text-lg leading-none italic">S</span>
-          </div>
-          <div>
-            <span className="font-serif font-bold text-lg text-[#1A1A1E] tracking-tight block leading-tight">
-              Scribe
-            </span>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-[#80838E] block">
-              Mastery Lab
-            </span>
-          </div>
-        </NavLink>
-        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#EAE3D6] text-[#555861]">
-          v2.4
-        </span>
-      </div>
-
-      {/* Quick Add Word Action */}
-      <div className="p-3">
-        <button
-          onClick={onOpenCaptureModal}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#FAF8F5] hover:bg-white text-[#1A1A1E] text-xs font-semibold rounded-lg border border-[#E0D9CD] shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-label="Account menu"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className="btn btn-ghost btn-icon"
+      >
+        <CaretUpDown size={18} />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="pop absolute bottom-full right-0 mb-2 w-56 bg-sheet border border-edge rounded-xl p-1.5 z-50 shadow-[0_12px_32px_-12px_rgb(27_26_23/0.3)]"
         >
-          <PlusCircle className="w-4 h-4 text-[#B85D38] group-hover:scale-105 transition-transform" />
-          <span>Save New Vocabulary</span>
-        </button>
-      </div>
-
-      {/* Main Navigation */}
-      <nav className="flex-1 px-3 py-1 space-y-0.5 overflow-y-auto">
-        <div className="px-2 pb-1.5 pt-1 text-[11px] font-bold uppercase tracking-wider text-[#8A8D96]">
-          Deliberate Practice
-        </div>
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                `flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all group ${
-                  isActive
-                    ? "bg-[#1F2E3D] text-[#FAF8F5] font-semibold shadow-2xs"
-                    : "text-[#4A4D55] hover:bg-[#EAE4D9]/70 hover:text-[#1A1A1E]"
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <div className="flex items-center gap-2.5">
-                    <Icon
-                      className={`w-4 h-4 transition-colors ${
-                        isActive
-                          ? "text-[#FAF8F5]"
-                          : "text-[#7C7F8A] group-hover:text-[#1A1A1E]"
-                      }`}
-                    />
-                    <span>{item.label}</span>
-                  </div>
-
-                  {item.badge && (
-                    <span
-                      className={`text-[10px] font-semibold px-1.5 py-0.2 rounded ${
-                        isActive
-                          ? "bg-white/20 text-[#FAF8F5]"
-                          : "bg-[#EAE4D9] text-[#555861]"
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
-
-                  {item.countKey === "vocab" && (
-                    <span
-                      className={`text-[10px] font-semibold px-1.5 py-0.2 rounded ${
-                        isActive
-                          ? "bg-white/20 text-[#FAF8F5]"
-                          : "bg-[#EAE4D9] text-[#555861]"
-                      }`}
-                    >
-                      {vocabulary.length}
-                    </span>
-                  )}
-                </>
-              )}
-            </NavLink>
-          );
-        })}
-      </nav>
-
-      {/* Streak & Learning Status Card */}
-      <div className="p-3 border-t border-[#E8E2D8]">
-        <div className="p-3 rounded-lg bg-[#FAF8F5] border border-[#E4DDD1] shadow-2xs">
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1A1E]">
-              <Flame className="w-4 h-4 text-[#EA580C] fill-[#EA580C]" />
-              <span>{user.streakDays} Day Streak</span>
-            </div>
-            <span className="text-[10px] font-medium text-[#059669] bg-[#DCFCE7] px-1.5 py-0.2 rounded">
-              Active
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1 justify-between mb-2">
-            {user.streakHistory.slice(0, 7).map((active, idx) => (
-              <div
-                key={idx}
-                className={`h-1.5 flex-1 rounded-full ${
-                  active ? "bg-[#EA580C]" : "bg-[#E5DFD4]"
-                }`}
-                title={`Day ${idx + 1}: ${active ? "Written" : "Missed"}`}
-              />
-            ))}
-          </div>
-
-          <div className="flex items-center justify-between text-[11px] text-[#6B6F7B]">
-            <span>Monthly Goal</span>
-            <span className="font-semibold text-[#1A1A1E]">
-              {user.wordsWrittenThisMonth.toLocaleString()} / 5,000 w
-            </span>
-          </div>
-          <div className="w-full bg-[#EAE4D9] h-1 rounded-full mt-1 overflow-hidden">
-            <div
-              className="bg-[#1F2E3D] h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${Math.min(100, Math.round((user.wordsWrittenThisMonth / 5000) * 100))}%`
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Demo reset trigger */}
-        <div className="mt-2 flex items-center justify-between px-1">
-          <span className="text-[10px] text-[#8C909B]">No AI generation • Human writer</span>
-          <button
-            onClick={resetToDefaults}
-            title="Reset sample data"
-            className="text-[10px] text-[#8C909B] hover:text-[#1A1A1E] flex items-center gap-1 cursor-pointer transition-colors"
+          <Link
+            to="/profile"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onNavigate?.();
+            }}
+            className="flex items-center gap-3 px-3 h-10 rounded-lg hover:bg-tint text-[14px]"
           >
-            <RotateCcw className="w-2.5 h-2.5" />
-            <span>Reset Demo</span>
+            <IdentificationCard size={17} className="text-ink-3" />
+            Writing profile
+          </Link>
+          <button
+            role="menuitem"
+            onClick={() => {
+              resetToDefaults();
+              setOpen(false);
+            }}
+            className="w-full flex items-center gap-3 px-3 h-10 rounded-lg hover:bg-tint text-[14px] text-left"
+          >
+            <ArrowCounterClockwise size={17} className="text-ink-3" />
+            Reset the sample data
           </button>
         </div>
+      )}
+    </div>
+  );
+};
+
+export const Sidebar = ({ onOpenCaptureModal, onNavigate, onClose }) => {
+  const { state } = useScribe();
+  const { user, vocabulary } = state;
+  const [draftWord, setDraftWord] = useState("");
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    onOpenCaptureModal(draftWord.trim());
+    setDraftWord("");
+    onNavigate?.();
+  };
+
+  const roleWords = user.role.split(" • ")[0].split(" ");
+  const title = roleWords.pop();
+  const level = roleWords.join(" ");
+
+  return (
+    <aside className="w-[288px] h-full bg-rail border-r border-rail-line flex flex-col gap-7 px-5 pt-7 pb-6 overflow-y-auto">
+      <div className="flex items-center justify-between px-2">
+        <Wordmark />
+        {onClose && (
+          <button onClick={onClose} className="btn btn-ghost btn-icon -mr-3" aria-label="Close menu">
+            <X size={18} />
+          </button>
+        )}
+      </div>
+
+      <form onSubmit={handleSave} className="flex flex-col gap-1.5">
+        <label htmlFor="save-word" className="text-[12px] font-medium text-ink-3 px-1">
+          Save a word
+        </label>
+        <div className="flex items-center gap-2 h-11 pl-3 pr-1.5 bg-sheet border border-line rounded-[10px] focus-within:border-ink transition-colors">
+          <BookmarkSimple size={16} className="text-ink-3 shrink-0" />
+          <input
+            id="save-word"
+            type="text"
+            value={draftWord}
+            onChange={(e) => setDraftWord(e.target.value)}
+            placeholder="Type a word you met…"
+            className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[14px] placeholder:text-ink-3"
+          />
+          <button
+            type="submit"
+            aria-label="Save word"
+            className="w-8 h-8 rounded-[7px] bg-ink text-sheet flex items-center justify-center hover:bg-black transition-colors shrink-0"
+          >
+            <Plus size={14} weight="bold" />
+          </button>
+        </div>
+      </form>
+
+      <nav aria-label="Main" className="flex-1 flex flex-col gap-5">
+        {navGroups.map((group, gi) => (
+          <div key={gi} className="flex flex-col gap-0.5">
+            {group.label && <div className="eyebrow text-[11px] px-3 pb-1.5">{group.label}</div>}
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.path === "/"}
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 h-10 px-3 rounded-[9px] text-[15px] transition-colors ${
+                      isActive
+                        ? "bg-sheet font-semibold text-ink shadow-[0_0_0_1px_var(--color-rail-line)]"
+                        : "text-ink-soft hover:bg-[#e8e3d8]"
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Icon size={18} className={isActive ? "text-pen" : ""} />
+                      <span className="flex-1">{item.label}</span>
+                      {item.countKey === "vocab" && <span className="count">{vocabulary.length}</span>}
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
+
+      <div className="flex items-center gap-3 p-3 border-t border-rail-line">
+        <div
+          aria-hidden="true"
+          className="w-[38px] h-[38px] rounded-full bg-ink text-paper flex items-center justify-center font-serif text-[16px] shrink-0"
+        >
+          {initials(user.name)}
+        </div>
+        <div className="flex-1 min-w-0 flex flex-col leading-tight">
+          <span className="font-semibold text-[14px] truncate">{user.name}</span>
+          <span className="text-[12px] text-ink-3 truncate">
+            {level} · {title}
+          </span>
+        </div>
+        <AccountMenu onNavigate={onNavigate} />
       </div>
     </aside>
   );

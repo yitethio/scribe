@@ -1,17 +1,7 @@
 import React, { useState } from "react";
-import {
-  Sparkles,
-  CheckCircle2,
-  AlertCircle,
-  ArrowRight,
-  RotateCcw,
-  Lightbulb,
-  Check,
-  ChevronRight,
-  Layers
-} from "lucide-react";
+import { CheckCircle, WarningCircle, ArrowRight, Question } from "@phosphor-icons/react";
 import { useScribe } from "../store/scribeContext";
-import { AppLayout } from "../components/layout/AppLayout";
+import { AppLayout, pageClass } from "../components/layout/AppLayout";
 
 export default function RevisionMode() {
   const { state, submitRevisionAnswer } = useScribe();
@@ -28,21 +18,17 @@ export default function RevisionMode() {
     e.preventDefault();
     if (!userRevision.trim()) return;
 
-    // Check if the expected keyword/collocation was fixed in revision
-    const normalized = userRevision.toLowerCase();
-    const isCorrect = normalized.includes(currentItem.expectedKeyword.toLowerCase());
+    const isCorrect = userRevision.toLowerCase().includes(currentItem.expectedKeyword.toLowerCase());
 
-    const result = {
+    setEvaluation({
       isCorrect,
-      feedback: isCorrect ? "✓ Mastery Verified" : "✗ Needs Further Refinement",
+      feedback: isCorrect ? "Fixed" : "Not quite yet",
       explanation: isCorrect
         ? currentItem.explanation
-        : `Take another look at "${currentItem.focusSegment}". Hint: ${currentItem.hint}`,
+        : `Look again at “${currentItem.focusSegment}”. ${currentItem.hint}`,
       original: currentItem.original,
       revised: userRevision
-    };
-
-    setEvaluation(result);
+    });
     submitRevisionAnswer(currentItem.id, userRevision, isCorrect);
   };
 
@@ -55,149 +41,158 @@ export default function RevisionMode() {
 
   return (
     <AppLayout
-      title="Revision Lab"
-      subtitle="Deliberate sentence repair: isolate linguistic defects and rewrite with precision"
+      title="Revision lab"
+      subtitle="One sentence at a time: find what is wrong with it, then rewrite it yourself."
     >
-      <div className="p-8 max-w-3xl mx-auto space-y-6 animate-in fade-in duration-150">
-        {/* Progress & Header */}
-        <div className="flex items-center justify-between border-b border-[#E8E2D8] pb-4">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#B85D38]">
-              Exercise {currentIndex + 1} of {revisionQueue.length}
+      <div className={`${pageClass} flex flex-wrap items-start gap-6`}>
+        <div className="flex-[7_1_520px] min-w-0">
+        <div className="flex items-center justify-between gap-4 rise">
+          <div className="flex items-center gap-1.5" aria-label={`Sentence ${currentIndex + 1} of ${revisionQueue.length}`}>
+            {revisionQueue.map((item, idx) => (
+              <span
+                key={item.id}
+                className={`h-1.5 rounded-full transition-[width,background-color] duration-300 ${
+                  idx === currentIndex ? "w-8 bg-pen" : idx < currentIndex ? "w-4 bg-ink" : "w-4 bg-tint-2"
+                }`}
+              />
+            ))}
+            <span className="ml-3 text-[14px] text-ink-2 tabular whitespace-nowrap">
+              Sentence {currentIndex + 1} of {revisionQueue.length}
             </span>
-            <h2 className="font-serif font-bold text-2xl text-[#1A1A1E]">
-              Sentence Precision Workshop
-            </h2>
           </div>
-
-          <span className="text-xs px-2.5 py-1 rounded-full bg-[#FAF0E6] text-[#B85D38] font-bold">
-            {currentItem.category}
-          </span>
+          <span className="tag tag-pen tag-caps hidden sm:inline-flex">{currentItem.category}</span>
         </div>
 
-        {/* Exercise Card */}
-        <div className="bg-white p-8 rounded-2xl border border-[#E4DDD1] shadow-2xs space-y-6">
-          {/* Original Sentence with defect highlighted */}
-          <div className="space-y-2">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#8A8D96]">
-              Original Sentence (Containing Defect)
-            </div>
-            <div className="p-4 bg-[#FAF8F5] border border-[#E8E2D8] rounded-xl font-serif text-base text-[#1A1A1E] leading-relaxed">
-              {currentItem.original.split(currentItem.focusSegment).map((part, i, arr) => (
-                <React.Fragment key={i}>
-                  {part}
-                  {i < arr.length - 1 && (
-                    <span className="bg-[#FEF3C7] text-[#92400E] px-1.5 py-0.5 rounded font-semibold underline decoration-[#D97706]">
-                      {currentItem.focusSegment}
-                    </span>
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
+        <section key={currentItem.id} className="mt-5 card p-6 sm:p-9 rise" style={{ "--i": 1 }}>
+          <p className="eyebrow">The sentence</p>
+          <p className="mt-3 font-serif text-[24px] sm:text-[28px] leading-[1.35] tracking-[-0.01em]">
+            {currentItem.original.split(currentItem.focusSegment).map((part, i, arr) => (
+              <React.Fragment key={i}>
+                {part}
+                {i < arr.length - 1 && <span className="pen-mark text-pen-deep">{currentItem.focusSegment}</span>}
+              </React.Fragment>
+            ))}
+          </p>
 
-          {/* Teacher Prompt */}
-          <div className="p-4 bg-[#F5EFE4] border border-[#E2D8C7] rounded-xl space-y-2 text-xs">
-            <div className="flex items-center gap-1.5 text-[#B85D38] font-bold">
-              <Lightbulb className="w-4 h-4" />
-              <span>Teacher's Guidance</span>
+          <div className="mt-8 panel-dark p-5 sm:p-6">
+            <div className="eyebrow text-night-mute flex items-center gap-2">
+              <Question size={14} />
+              <span>Your teacher asks</span>
             </div>
-            <p className="font-serif text-[#2F323A] font-medium leading-relaxed">
-              "{currentItem.prompt}"
-            </p>
-
-            {!hintOpen ? (
-              <button
-                onClick={() => setHintOpen(true)}
-                className="text-[11px] text-[#7A7E8B] hover:text-[#1A1A1E] underline cursor-pointer pt-1"
-              >
-                Need a hint?
-              </button>
-            ) : (
-              <p className="text-[11px] text-[#065F46] bg-[#ECFDF5] p-2 rounded border border-[#A7F3D0]">
-                <strong>Hint:</strong> {currentItem.hint}
+            <p className="mt-2 font-serif italic text-[19px] leading-[1.45]">&ldquo;{currentItem.prompt}&rdquo;</p>
+            {hintOpen ? (
+              <p className="mt-4 panel-dark-inner px-4 py-3 text-[14.5px] text-night-soft fade">
+                <span className="font-semibold text-night-text">Hint. </span>
+                {currentItem.hint}
               </p>
+            ) : (
+              <button onClick={() => setHintOpen(true)} className="link text-[14px] mt-2 min-h-9 text-night-text hover:text-white">
+                I need a hint
+              </button>
             )}
           </div>
 
-          {/* Revision Input or Evaluation Result */}
           {!evaluation ? (
-            <form onSubmit={handleSubmitRevision} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[#6B6F7B]">
-                  Your Revised Sentence
-                </label>
-                <textarea
-                  rows={3}
-                  value={userRevision}
-                  onChange={(e) => setUserRevision(e.target.value)}
-                  placeholder="Type the corrected sentence here..."
-                  className="w-full p-3.5 bg-white border border-[#DDD6C9] rounded-xl text-base font-serif text-[#1A1A1E] focus:outline-hidden focus:border-[#1F2E3D] leading-relaxed resize-none"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={!userRevision.trim()}
-                className="w-full py-3 bg-[#1F2E3D] hover:bg-[#15202B] disabled:bg-[#CCC5B8] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
-              >
-                Submit & Evaluate Revision
+            <form onSubmit={handleSubmitRevision} className="mt-8 space-y-4">
+              <label htmlFor="revision" className="block eyebrow">
+                Your rewrite
+              </label>
+              <textarea
+                id="revision"
+                rows={3}
+                value={userRevision}
+                onChange={(e) => setUserRevision(e.target.value)}
+                placeholder="Write the corrected sentence"
+                className="field font-serif text-[19px] leading-relaxed resize-none"
+              />
+              <button type="submit" disabled={!userRevision.trim()} className="btn btn-primary w-full sm:w-auto px-6">
+                Check my rewrite
               </button>
             </form>
           ) : (
-            <div className="space-y-5 pt-2 border-t border-[#E8E2D8] animate-in fade-in duration-150">
-              {/* Result Badge */}
+            <div className="mt-8 space-y-6 fade">
               <div
-                className={`p-4 rounded-xl border flex items-start gap-3 ${
-                  evaluation.isCorrect
-                    ? "bg-[#ECFDF5] border-[#A7F3D0] text-[#065F46]"
-                    : "bg-[#FEF2F2] border-[#FECACA] text-[#991B1B]"
+                className={`rounded-xl p-5 flex items-start gap-3 ${
+                  evaluation.isCorrect ? "bg-good-soft text-good" : "bg-pen-soft text-pen-deep"
                 }`}
               >
                 {evaluation.isCorrect ? (
-                  <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+                  <CheckCircle size={22} weight="fill" className="shrink-0" />
                 ) : (
-                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <WarningCircle size={22} weight="fill" className="shrink-0" />
                 )}
-                <div className="space-y-1 text-xs">
-                  <div className="font-bold text-sm">{evaluation.feedback}</div>
-                  <p className="leading-relaxed">{evaluation.explanation}</p>
+                <div>
+                  <div className="font-serif text-[20px] leading-tight">{evaluation.feedback}</div>
+                  <p className="mt-1 text-[14.5px] leading-relaxed">{evaluation.explanation}</p>
                 </div>
               </div>
 
-              {/* Revision Comparison */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#E8E2D8] space-y-1">
-                  <div className="text-[10px] font-bold uppercase text-[#8A8D96]">Original</div>
-                  <div className="font-serif italic text-[#555862]">"{evaluation.original}"</div>
+              <div className="fact-strip">
+                <div>
+                  <div className="eyebrow">Before</div>
+                  <p className="mt-1.5 font-serif text-[17px] leading-relaxed text-ink-3 line-through decoration-pen/60">
+                    {evaluation.original}
+                  </p>
                 </div>
-                <div className="p-3 bg-white rounded-xl border border-[#D5CDC0] space-y-1">
-                  <div className="text-[10px] font-bold uppercase text-[#059669]">Your Revision</div>
-                  <div className="font-serif font-bold text-[#1A1A1E]">"{evaluation.revised}"</div>
+                <div>
+                  <div className="eyebrow">Your rewrite</div>
+                  <p className="mt-1.5 font-serif text-[17px] leading-relaxed">{evaluation.revised}</p>
                 </div>
               </div>
 
-              {/* Action buttons */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
                 {!evaluation.isCorrect && (
-                  <button
-                    onClick={() => setEvaluation(null)}
-                    className="px-4 py-2.5 bg-white border border-[#DDD6C9] hover:bg-[#F2ECE1] text-xs font-semibold rounded-xl cursor-pointer"
-                  >
-                    Try Again
+                  <button onClick={() => setEvaluation(null)} className="btn btn-outline">
+                    Try again
                   </button>
                 )}
-                <button
-                  onClick={handleNext}
-                  className="flex-1 py-2.5 px-4 bg-[#1F2E3D] hover:bg-[#15202B] text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <span>Next Sentence Exercise</span>
-                  <ChevronRight className="w-4 h-4" />
+                <button onClick={handleNext} className="btn btn-primary px-6">
+                  <span>Next sentence</span>
+                  <ArrowRight size={16} />
                 </button>
               </div>
             </div>
           )}
+        </section>
         </div>
+
+        <aside className="card flex-[4_1_300px] min-w-0 px-3 pt-5 pb-2 rise" style={{ "--i": 2 }} aria-label="Today's queue">
+          <div className="px-3 pb-4 flex items-center justify-between gap-3">
+            <span className="eyebrow">Today's queue</span>
+            <span className="text-[13px] text-ink-3 tabular">{revisionQueue.length} sentences</span>
+          </div>
+          <ol className="rows border-t border-rule">
+            {revisionQueue.map((item, idx) => {
+              const current = idx === currentIndex;
+              const done = idx < currentIndex;
+              return (
+                <li key={item.id}>
+                  <button
+                    onClick={() => {
+                      setCurrentIndex(idx);
+                      setEvaluation(null);
+                      setUserRevision("");
+                      setHintOpen(false);
+                    }}
+                    aria-current={current ? "step" : undefined}
+                    className="row-link w-full text-left flex items-center gap-3 px-3 py-3.5"
+                  >
+                    <span className={`icon-tile w-9 h-9 text-[13px] font-semibold tabular ${current ? "bg-ink text-sheet" : ""}`}>
+                      {idx + 1}
+                    </span>
+                    <span className="flex-1 min-w-0">
+                      <span className="block font-serif text-[16px] leading-snug truncate">{item.original}</span>
+                      <span className="block text-[12.5px] text-ink-3">{item.category}</span>
+                    </span>
+                    <span className={`tag tag-dot shrink-0 ${current ? "tag-pen" : done ? "tag-good" : ""}`}>
+                      {current ? "Now" : done ? "Done" : "Next"}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </aside>
       </div>
     </AppLayout>
   );

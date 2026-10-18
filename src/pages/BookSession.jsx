@@ -1,28 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
-  BookOpen,
-  ChevronLeft,
-  ChevronRight,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  Clock,
-  Sparkles,
+  CaretLeft,
+  CaretRight,
+  MagnifyingGlassPlus,
+  MagnifyingGlassMinus,
   Plus,
-  Upload,
-  CheckCircle2,
-  Bookmark,
-  FileText,
-  Search,
-  X,
-  RotateCcw,
-  BookMarked,
-  Layers,
-  ArrowRight
-} from "lucide-react";
+  UploadSimple,
+  CheckCircle,
+  X
+} from "@phosphor-icons/react";
 import { useScribe } from "../store/scribeContext";
 import { AppLayout } from "../components/layout/AppLayout";
+import { Dialog } from "../components/ui/Dialog";
+import { BookCover } from "../components/ui/BookCover";
 
 export default function BookSession() {
   const { state, updateBookSession, addBookSessionWord, addVocabularyWord } = useScribe();
@@ -35,7 +26,6 @@ export default function BookSession() {
   // PDF Viewer controls
   const [zoom, setZoom] = useState(100);
   const [pageInput, setPageInput] = useState(bookSession.currentPage);
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Vocabulary popup / popover state
   const [selectedWordChip, setSelectedWordChip] = useState(null);
@@ -90,7 +80,7 @@ export default function BookSession() {
   }, [isDragging]);
 
   // Handle Text Selection in My Writing area
-  const handleTextSelect = (e) => {
+  const handleTextSelect = () => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) {
       setSelectionPopover(null);
@@ -208,182 +198,128 @@ export default function BookSession() {
   };
 
   return (
-    <AppLayout
-      title="Book Session Workspace"
-      subtitle="Split-screen reference reading, deliberate manual rewriting & vocabulary acquisition"
-      hideTopHeader={true}
-    >
-      <div className="flex flex-col h-screen overflow-hidden bg-[#FAF8F5]">
-        {/* Session Top Bar */}
-        <header className="h-14 border-b border-[#E8E2D8] bg-white px-6 flex items-center justify-between shrink-0 z-20">
-          {/* Left Session Meta */}
-          <div className="flex items-center gap-4">
-            <Link
-              to="/"
-              className="text-xs font-semibold text-[#6B6F7B] hover:text-[#1A1A1E] flex items-center gap-1 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
+    <AppLayout title="Book session" hideTopHeader={true}>
+      <div className="flex flex-col lg:h-[100dvh] lg:overflow-hidden bg-paper">
+        {/* Session bar */}
+        <header className="min-h-20 px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 shrink-0">
+          <div className="flex items-center gap-4 min-w-0">
+            <Link to="/" className="btn btn-ghost btn-sm -ml-2">
+              <CaretLeft size={15} />
               <span>Dashboard</span>
             </Link>
-
-            <div className="h-4 w-px bg-[#E8E2D8]" />
-
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-[#B85D38]" />
-              <span className="font-serif font-bold text-sm text-[#1A1A1E]">
-                {bookSession.bookTitle}
-              </span>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#FAF0E6] text-[#B85D38] font-medium border border-[#F3E2D0]">
-                Page {bookSession.currentPage} of {bookSession.totalPages}
-              </span>
+            <div className="min-w-0">
+              <p className="eyebrow tabular">
+                Book session · page {bookSession.currentPage} of {bookSession.totalPages}
+              </p>
+              <h1 className="mt-1 font-serif text-[24px] leading-tight tracking-[-0.015em] truncate">{bookSession.bookTitle}</h1>
             </div>
           </div>
 
-          {/* Right Session Metrics */}
-          <div className="flex items-center gap-5 text-xs text-[#52555F]">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[#8A8D96]">Words Rewritten:</span>
-              <span className="font-mono font-bold text-[#1A1A1E]">
-                {wordsRewrittenCount.toLocaleString()} w
-              </span>
+          <div className="flex items-center gap-5 sm:gap-7 text-[13px] text-ink-3 whitespace-nowrap">
+            <div>
+              <div className="font-serif text-[26px] leading-none text-ink tabular">{wordsRewrittenCount.toLocaleString()}</div>
+              <div className="mt-1">words rewritten</div>
             </div>
-
-            <div className="flex items-center gap-1.5">
-              <span className="text-[#8A8D96]">Session Vocab:</span>
-              <span className="font-mono font-bold text-[#B85D38]">
-                {bookSession.sessionVocabulary.length} words
-              </span>
+            <div>
+              <div className="font-serif text-[26px] leading-none text-pen tabular">{bookSession.sessionVocabulary.length}</div>
+              <div className="mt-1">new words</div>
             </div>
-
-            <div className="flex items-center gap-1.5 font-mono bg-[#FAF8F5] px-2.5 py-1 rounded-lg border border-[#E5DFD4]">
-              <Clock className="w-3.5 h-3.5 text-[#8A8D96]" />
-              <span className="font-semibold text-[#1A1A1E]">
-                {formatTimer(elapsedSeconds)}
-              </span>
+            <div className="hidden sm:block whitespace-nowrap">
+              <div className="font-serif text-[26px] leading-none text-ink tabular">{formatTimer(elapsedSeconds)}</div>
+              <div className="mt-1">this session</div>
             </div>
-
-            <button
-              onClick={() => setSessionActive(!sessionActive)}
-              className="px-3 py-1.5 bg-[#1F2E3D] hover:bg-[#15202B] text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors cursor-pointer"
-            >
-              {sessionActive ? "Change PDF" : "Resume Workspace"}
+            <button onClick={() => setSessionActive(!sessionActive)} className="btn btn-quiet btn-sm">
+              {sessionActive ? "Change book" : "Back to the book"}
             </button>
           </div>
         </header>
 
-        {/* View Switch: Setup vs Active Workspace */}
         {!sessionActive ? (
-          /* Book Setup View */
-          <div className="flex-1 overflow-y-auto p-12 max-w-2xl mx-auto space-y-6">
-            <div>
-              <h2 className="font-serif font-bold text-2xl text-[#1A1A1E]">
-                Book Rewrite Setup
+          /* Setup */
+          <div className="flex-1 overflow-y-auto px-5 py-10 sm:py-16">
+            <div className="max-w-2xl mx-auto">
+              <p className="eyebrow">New book session</p>
+              <h2 className="mt-2.5 font-serif text-[36px] sm:text-[46px] leading-[1.05] tracking-[-0.025em]">
+                Choose a book to rewrite
               </h2>
-              <p className="text-xs text-[#6B6F7B] mt-1 leading-relaxed">
-                Upload the manuscript or classic book you intend to rewrite. The text serves as your visual reference on the left—you rewrite by hand on the right to absorb syntax, pacing, and vocabulary.
+              <p className="mt-3 text-[16px] text-ink-2 max-w-[56ch]">
+                The book stays on the left as your reference. You rewrite it by hand on the right, and its syntax, pacing
+                and vocabulary sink in as you go.
               </p>
-            </div>
 
-            {/* Drag & Drop PDF upload */}
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOver(false);
-                if (e.dataTransfer.files[0]) {
-                  handlePdfFileSelect(e.dataTransfer.files[0]);
-                }
-              }}
-              className={`p-8 border-2 border-dashed rounded-2xl text-center transition-all ${
-                dragOver
-                  ? "border-[#B85D38] bg-[#FAF0E6]/50"
-                  : "border-[#D8CFBF] bg-white hover:border-[#B85D38]"
-              }`}
-            >
-              <div className="w-12 h-12 rounded-xl bg-[#FAF0E6] text-[#B85D38] flex items-center justify-center mx-auto mb-3">
-                <Upload className="w-6 h-6" />
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOver(false);
+                  if (e.dataTransfer.files[0]) handlePdfFileSelect(e.dataTransfer.files[0]);
+                }}
+                className={`mt-8 rounded-2xl border border-dashed px-6 py-12 text-center transition-colors ${
+                  dragOver ? "bg-pen-soft border-pen" : "bg-sheet border-line"
+                }`}
+              >
+                <span className="icon-tile w-12 h-12 mx-auto text-pen">
+                  <UploadSimple size={22} />
+                </span>
+                <h3 className="mt-4 font-serif text-[24px]">Drop a PDF here</h3>
+                <p className="mt-1 text-[14px] text-ink-2">or pick one from your computer</p>
+                <label className="btn btn-primary mt-6">
+                  <span>Choose a PDF</span>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    className="sr-only"
+                    onChange={(e) => handlePdfFileSelect(e.target.files[0])}
+                  />
+                </label>
+                <p className="mt-5 text-[13px] text-ink-3">
+                  Scribe never pastes the text for you. The thinking and the rewriting are yours.
+                </p>
               </div>
-              <h3 className="font-serif font-bold text-base text-[#1A1A1E]">
-                Upload Book PDF
-              </h3>
-              <p className="text-xs text-[#7A7E8B] mt-1 mb-4">
-                Drag and drop your manuscript PDF here, or click to browse files
-              </p>
 
-              <label className="inline-block py-2 px-4 bg-[#1F2E3D] hover:bg-[#15202B] text-white text-xs font-semibold rounded-xl cursor-pointer transition-colors shadow-2xs">
-                <span>Select PDF from Computer</span>
-                <input
-                  type="file"
-                  accept=".pdf"
-                  className="hidden"
-                  onChange={(e) => handlePdfFileSelect(e.target.files[0])}
-                />
-              </label>
-
-              <p className="text-[11px] text-[#9CA3AF] mt-3">
-                Note: Scribe does not OCR or automatically paste the PDF. You do the thinking and rewriting.
-              </p>
-            </div>
-
-            {/* Continue with Sample Book */}
-            <div className="p-5 bg-white border border-[#E2DBD0] rounded-2xl flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <img
-                  src={bookSession.coverUrl || "/book-cover.jpg"}
-                  alt="Book Cover"
-                  className="w-12 h-16 object-cover rounded-md border border-[#DDD6C9]"
-                />
-                <div>
-                  <div className="font-serif font-bold text-sm text-[#1A1A1E]">
-                    The Craft of Prose: Guide to Elegant Writing
-                  </div>
-                  <div className="text-xs text-[#6B6F7B]">
-                    Eleanor Vance • 312 pages • Edition IV
+              <div className="mt-4 card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <BookCover title="The Craft of Prose" />
+                  <div>
+                    <div className="eyebrow">Sample book</div>
+                    <div className="mt-1 font-serif text-[20px] leading-snug">The Craft of Prose: Guide to Elegant Writing</div>
+                    <div className="text-[13px] text-ink-3">Eleanor Vance · 312 pages · fourth edition</div>
                   </div>
                 </div>
+                <button onClick={() => setSessionActive(true)} className="btn btn-outline shrink-0">
+                  Use the sample book
+                </button>
               </div>
 
-              <button
-                onClick={() => setSessionActive(true)}
-                className="py-2 px-4 bg-[#FAF8F5] hover:bg-[#F2ECE1] border border-[#DDD6C9] text-xs font-semibold rounded-xl cursor-pointer transition-colors"
-              >
-                Use Sample Book
+              <button onClick={() => setSessionActive(true)} className="link text-[14px] mt-6">
+                Continue without a PDF
               </button>
             </div>
-
-            <button
-              onClick={() => setSessionActive(true)}
-              className="w-full py-3 bg-[#FAF8F5] hover:bg-[#F0EAE0] text-[#1A1A1E] border border-[#DDD6C9] text-xs font-semibold rounded-xl cursor-pointer"
-            >
-              Continue without PDF
-            </button>
           </div>
         ) : (
-          /* Split Screen Active Workspace */
-          <div ref={containerRef} className="flex-1 flex overflow-hidden relative">
-            {/* Left Panel: Book / PDF Viewer */}
-            <div
-              style={{ width: `${splitRatio}%` }}
-              className="flex flex-col border-r border-[#E8E2D8] bg-[#F7F4EE] overflow-hidden select-text"
+          /* Split workspace */
+          <div ref={containerRef} className="flex-1 flex flex-col lg:flex-row lg:overflow-hidden min-h-0 px-3 sm:px-6 pb-3 sm:pb-6 gap-4 lg:gap-0">
+            {/* Book */}
+            <section
+              style={{ "--w": `${splitRatio}%` }}
+              className="w-full lg:w-[var(--w)] flex flex-col bg-rail border border-rail-line rounded-2xl overflow-hidden select-text"
+              aria-label="Reference book"
             >
-              {/* PDF Toolbar */}
-              <div className="h-11 border-b border-[#E8E2D8] bg-white px-4 flex items-center justify-between shrink-0 text-xs text-[#52555F]">
-                {/* Page Navigation */}
-                <div className="flex items-center gap-1.5">
+              <div className="h-14 px-3 flex items-center justify-between shrink-0 text-[13px] text-ink-2 border-b border-rail-line">
+                <div className="flex items-center gap-1">
                   <button
                     onClick={() => handlePageChange(bookSession.currentPage - 1)}
                     disabled={bookSession.currentPage <= 1}
-                    className="p-1 rounded hover:bg-[#F2ECE1] disabled:opacity-40 transition-colors cursor-pointer"
-                    title="Previous page"
+                    className="btn btn-ghost btn-icon"
+                    aria-label="Previous page"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <CaretLeft size={16} />
                   </button>
-
-                  <div className="flex items-center gap-1 text-xs">
+                  <label className="flex items-center gap-1.5">
                     <span>Page</span>
                     <input
                       type="number"
@@ -392,69 +328,52 @@ export default function BookSession() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handlePageChange(pageInput);
                       }}
-                      className="w-12 text-center py-0.5 px-1 bg-[#FAF8F5] border border-[#DDD6C9] rounded font-mono text-xs font-bold text-[#1A1A1E]"
+                      className="field w-14 h-8 px-1.5 py-0 text-center text-[13px] tabular"
                     />
-                    <span>of {bookSession.totalPages}</span>
-                  </div>
-
+                    <span className="tabular whitespace-nowrap">of {bookSession.totalPages}</span>
+                  </label>
                   <button
                     onClick={() => handlePageChange(bookSession.currentPage + 1)}
                     disabled={bookSession.currentPage >= bookSession.totalPages}
-                    className="p-1 rounded hover:bg-[#F2ECE1] disabled:opacity-40 transition-colors cursor-pointer"
-                    title="Next page"
+                    className="btn btn-ghost btn-icon"
+                    aria-label="Next page"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <CaretRight size={16} />
                   </button>
                 </div>
 
-                {/* Zoom & Fit Controls */}
-                <div className="flex items-center gap-1.5">
+                <div className="hidden sm:flex items-center gap-0.5">
                   <button
                     onClick={() => setZoom((z) => Math.max(70, z - 10))}
-                    className="p-1 rounded hover:bg-[#F2ECE1] cursor-pointer"
-                    title="Zoom out"
+                    className="btn btn-ghost btn-icon"
+                    aria-label="Zoom out"
                   >
-                    <ZoomOut className="w-3.5 h-3.5" />
+                    <MagnifyingGlassMinus size={16} />
                   </button>
-                  <span className="font-mono text-[11px] w-9 text-center font-semibold">
+                  <button onClick={() => setZoom(100)} className="btn btn-ghost btn-sm w-14 tabular px-0" title="Reset zoom">
                     {zoom}%
-                  </span>
+                  </button>
                   <button
                     onClick={() => setZoom((z) => Math.min(150, z + 10))}
-                    className="p-1 rounded hover:bg-[#F2ECE1] cursor-pointer"
-                    title="Zoom in"
+                    className="btn btn-ghost btn-icon"
+                    aria-label="Zoom in"
                   >
-                    <ZoomIn className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => setZoom(100)}
-                    className="p-1 rounded hover:bg-[#F2ECE1] text-[11px] font-semibold cursor-pointer ml-1"
-                    title="Fit to width"
-                  >
-                    Reset
+                    <MagnifyingGlassPlus size={16} />
                   </button>
                 </div>
               </div>
 
-              {/* Book Page Canvas with authentic book margins & typography */}
-              <div className="flex-1 overflow-y-auto p-8 flex justify-center">
-                <div
+              <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-10 pt-6 flex justify-center">
+                <article
                   style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center" }}
-                  className="w-full max-w-xl bg-white rounded-lg shadow-sm border border-[#E0D9CC] p-10 font-serif text-[#1F2228] transition-transform duration-100 flex flex-col justify-between min-h-[720px]"
+                  className="w-full max-w-[560px] bg-sheet border border-edge rounded-[6px] shadow-[0_10px_30px_-18px_rgb(27_26_23/0.35)] px-8 sm:px-12 pt-12 pb-8 font-serif text-ink flex flex-col justify-between min-h-[720px] transition-transform duration-150"
                 >
-                  <div className="space-y-6">
-                    {/* Chapter Header */}
-                    <div className="border-b border-[#EAE3D6] pb-3 text-center">
-                      <div className="text-[10px] font-sans font-bold uppercase tracking-widest text-[#8A8D96]">
-                        {currentPageData.chapter}
-                      </div>
-                      <h3 className="font-serif italic text-base text-[#1A1A1E] mt-0.5">
-                        {currentPageData.subhead}
-                      </h3>
-                    </div>
-
-                    {/* Book Paragraphs */}
-                    <div className="space-y-5 text-sm font-serif-prose leading-[1.8] text-[#24272E]">
+                  <div>
+                    <header className="text-center">
+                      <div className="eyebrow font-sans">{currentPageData.chapter}</div>
+                      <h2 className="mt-1 italic text-[20px]">{currentPageData.subhead}</h2>
+                    </header>
+                    <div className="mt-8 space-y-4 text-[16.5px] leading-[1.75]">
                       {currentPageData.paragraphs.map((para, idx) => (
                         <p key={idx} className="indent-6 first:indent-0">
                           {para}
@@ -462,213 +381,165 @@ export default function BookSession() {
                       ))}
                     </div>
                   </div>
-
-                  {/* Book Page Footer */}
-                  <div className="border-t border-[#EAE3D6] pt-3 text-center text-xs font-serif text-[#8A8D96]">
-                    — {bookSession.currentPage} —
-                  </div>
-                </div>
+                  <footer className="pt-8 text-center text-[14px] text-ink-3 tabular">{bookSession.currentPage}</footer>
+                </article>
               </div>
-            </div>
+            </section>
 
-            {/* Draggable Divider */}
+            {/* Resize handle */}
             <div
               onMouseDown={handleMouseDown}
-              className={`w-1.5 hover:w-2 bg-[#E2DBD0] hover:bg-[#B85D38] transition-all cursor-col-resize select-none shrink-0 relative z-10 flex items-center justify-center ${
-                isDragging ? "bg-[#B85D38] w-2" : ""
-              }`}
-              title="Drag to resize split view"
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Drag to resize"
+              className="hidden lg:flex w-6 z-10 cursor-col-resize items-center justify-center group shrink-0"
             >
-              <div className="w-0.5 h-6 bg-white/70 rounded-full" />
+              <span
+                className={`w-1 h-12 rounded-full transition-colors ${
+                  isDragging ? "bg-pen" : "bg-line group-hover:bg-ink-3"
+                }`}
+              />
             </div>
 
-            {/* Right Panel: My Writing / Manual Rewrite Canvas */}
-            <div
-              style={{ width: `${100 - splitRatio}%` }}
-              className="flex flex-col bg-[#FAF8F5] overflow-hidden"
+            {/* Rewrite */}
+            <section
+              style={{ "--w": `${100 - splitRatio}%` }}
+              className="card w-full lg:w-[var(--w)] flex flex-col overflow-hidden min-h-[70vh] lg:min-h-0"
+              aria-label="Your rewrite"
             >
-              {/* Session Vocabulary Chips Bar */}
-              <div className="p-3 border-b border-[#E8E2D8] bg-white flex items-center justify-between gap-3 shrink-0">
-                <div className="flex items-center gap-2 overflow-x-auto py-0.5 flex-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A8D96] shrink-0">
-                    Session Vocabulary:
-                  </span>
-                  {bookSession.sessionVocabulary.map((word, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleOpenChip(word)}
-                      className="px-2.5 py-1 rounded-md bg-[#FAF0E6] hover:bg-[#F5E2D0] text-[#B85D38] border border-[#F0DFD0] text-xs font-serif font-semibold cursor-pointer transition-colors shrink-0 flex items-center gap-1"
-                    >
-                      <span>{word}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="text-[11px] text-[#8C909B] shrink-0">
-                  Select any word below to <strong className="text-[#1A1A1E]">+ Add</strong>
-                </div>
+              <div className="h-14 px-5 sm:px-6 flex items-center gap-2.5 shrink-0 overflow-x-auto border-b border-rule">
+                <span className="eyebrow shrink-0 mr-1">New words</span>
+                {bookSession.sessionVocabulary.map((word, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleOpenChip(word)}
+                    className="chip font-serif text-[14px] text-ink hover:border-pen hover:text-pen transition-colors shrink-0"
+                  >
+                    {word}
+                  </button>
+                ))}
+                <span className="ml-auto text-[13px] text-ink-3 shrink-0 hidden 2xl:inline">
+                  Select a word in your text to save it
+                </span>
               </div>
 
-              {/* Writing Canvas */}
-              <div className="flex-1 overflow-y-auto p-8 relative" onMouseUp={handleTextSelect}>
+              <div className="flex-1 overflow-y-auto px-5 sm:px-10 py-8" onMouseUp={handleTextSelect}>
                 <textarea
                   value={bookSession.draftText}
                   onChange={(e) => updateBookSession({ draftText: e.target.value })}
-                  placeholder="Begin manually rewriting the text from the reference manuscript on the left..."
-                  className="w-full h-full min-h-[500px] bg-transparent border-none outline-hidden resize-none font-serif-prose text-base leading-[1.85] text-[#1A1A1E] placeholder:text-[#AAA69D]"
+                  aria-label="Your rewrite"
+                  placeholder="Rewrite the page on the left, in your own hand..."
+                  className="w-full h-full min-h-[500px] bg-transparent border-none outline-none resize-none font-serif text-[18px] leading-[1.75] text-ink placeholder:text-ink-3/60"
                 />
 
-                {/* Floating Selection Popover */}
                 {selectionPopover && (
                   <div
-                    style={{
-                      position: "fixed",
-                      top: `${selectionPopover.top}px`,
-                      left: `${selectionPopover.left}px`
-                    }}
-                    className="z-50 bg-[#1F2E3D] text-white px-3 py-1.5 rounded-lg shadow-xl text-xs font-semibold flex items-center gap-1.5 animate-in fade-in zoom-in-95 duration-100 cursor-pointer"
-                    onClick={handleAddWordFromPopover}
+                    style={{ position: "fixed", top: `${selectionPopover.top}px`, left: `${selectionPopover.left}px` }}
+                    className="z-50 pop"
                   >
-                    <Plus className="w-3.5 h-3.5 text-[#B85D38]" />
-                    <span>+ Add "{selectionPopover.word}"</span>
+                    <button
+                      onClick={handleAddWordFromPopover}
+                      className="btn btn-primary btn-sm shadow-[0_8px_24px_-8px_rgb(22_24_28/0.4)]"
+                    >
+                      <Plus size={14} weight="bold" className="text-pen" />
+                      <span>Save "{selectionPopover.word}"</span>
+                    </button>
                   </div>
                 )}
               </div>
 
-              {/* Canvas Bottom Status */}
-              <div className="h-9 border-t border-[#E8E2D8] bg-white px-6 flex items-center justify-between shrink-0 text-xs text-[#7A7E8B]">
-                <div className="flex items-center gap-3">
-                  <span>{wordsRewrittenCount} words rewritten</span>
-                  <span>•</span>
-                  <span>Active Book Mode</span>
-                </div>
-                <div className="text-[11px] text-[#059669] flex items-center gap-1 font-medium">
-                  <CheckCircle2 className="w-3 h-3" />
-                  <span>Session auto-saved</span>
-                </div>
+              <div className="h-12 px-5 sm:px-6 flex items-center justify-between text-[13px] text-ink-3 shrink-0 border-t border-rule">
+                <span className="tabular">{wordsRewrittenCount} words rewritten</span>
+                <span className="tag tag-good">
+                  <CheckCircle size={13} weight="fill" />
+                  Saved
+                </span>
               </div>
-            </div>
+            </section>
           </div>
         )}
 
-        {/* Vocabulary Detail Popover / Modal (When a chip is clicked) */}
+        {/* Word card, opened from a new-word tag */}
         {selectedWordChip && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-2xs animate-in fade-in duration-150">
-            <div className="bg-[#FAF8F5] border border-[#E4DDD1] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-              {/* Header */}
-              <div className="px-6 py-4 border-b border-[#E8E2D8] flex items-center justify-between bg-white">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#FAF0E6] text-[#B85D38] flex items-center justify-center">
-                    <Bookmark className="w-4 h-4" />
+          <Dialog onClose={() => setSelectedWordChip(null)} labelledBy="word-card-title">
+            <div className="overflow-y-auto">
+              <div className="px-6 pt-6 flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-baseline gap-3">
+                    <h3 id="word-card-title" className="font-serif text-[32px] leading-none">
+                      {selectedWordChip}
+                    </h3>
+                    <span className="text-[14px] italic font-serif text-ink-3">{activeChipVocabItem.pos?.toLowerCase()}</span>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-serif font-bold text-lg text-[#1A1A1E]">
-                        {selectedWordChip}
-                      </h3>
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#EFE9DD] text-[#555861] font-medium">
-                        {activeChipVocabItem.pos}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-[#6B6F7B]">
-                      Captured during Book Rewriting Session
-                    </p>
-                  </div>
+                  <p className="mt-2.5"><span className="tag tag-pen tag-caps">Found while rewriting</span></p>
                 </div>
-                <button
-                  onClick={() => setSelectedWordChip(null)}
-                  className="p-1 rounded-lg text-[#848792] hover:text-[#1A1A1E] hover:bg-[#EAE4D9]/60 transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
+                <button onClick={() => setSelectedWordChip(null)} className="btn btn-ghost btn-icon -mr-2" aria-label="Close">
+                  <X size={18} />
                 </button>
               </div>
 
-              {/* Body */}
-              <div className="p-6 space-y-4">
-                {/* Found in your writing */}
-                <div className="p-3 bg-[#F4EFE6] border border-[#E5DDD0] rounded-xl space-y-1">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-[#8A8D96]">
-                    Found in your writing:
-                  </div>
-                  <p className="font-serif italic text-xs text-[#2A2D33] leading-relaxed">
-                    "The knight approached the <strong className="text-[#B85D38]">{selectedWordChip}</strong> overlooking the valley."
-                  </p>
-                </div>
+              <div className="p-6 space-y-5">
+                <p className="font-serif italic text-[17px] leading-relaxed text-ink-2">
+                  &ldquo;The knight approached the <span className="pen-mark not-italic text-ink">{selectedWordChip}</span>{" "}
+                  overlooking the valley.&rdquo;
+                </p>
 
-                {/* Prompt: User must define first */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[#6B6F7B]">
-                    What do you think this word means?
+                <div>
+                  <label htmlFor="chip-def" className="block text-[14px] font-medium mb-2">
+                    What do you think it means?
                   </label>
                   <textarea
+                    id="chip-def"
                     rows={3}
                     value={chipUserDef}
                     onChange={(e) => setChipUserDef(e.target.value)}
-                    placeholder="Enter your working understanding before revealing the dictionary meaning..."
+                    placeholder="Write your own meaning before you see the dictionary's."
                     disabled={chipRevealed}
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#DDD6C9] rounded-xl text-xs font-serif text-[#1A1A1E] leading-relaxed focus:outline-hidden focus:border-[#1F2E3D] disabled:bg-[#F2ECE1]/50 resize-none"
+                    className="field font-serif text-[16px] leading-relaxed resize-none"
                   />
                 </div>
 
                 {!chipRevealed ? (
-                  <button
-                    onClick={handleSaveChipDefinition}
-                    disabled={!chipUserDef.trim()}
-                    className="w-full py-2.5 bg-[#1F2E3D] hover:bg-[#15202B] disabled:bg-[#CCC5B8] text-white text-xs font-semibold rounded-xl cursor-pointer transition-colors shadow-2xs"
-                  >
-                    Submit Definition & Reveal Answer
+                  <button onClick={handleSaveChipDefinition} disabled={!chipUserDef.trim()} className="btn btn-primary w-full h-11">
+                    Check my meaning
                   </button>
                 ) : (
-                  <div className="space-y-3 pt-2 border-t border-[#E8E2D8] animate-in fade-in duration-150">
-                    <div className="p-4 bg-white border border-[#E0D9CD] rounded-xl space-y-2">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#8A8D96]">
-                        Actual Meaning
+                  <div className="space-y-4 fade">
+                    <div className="inset border border-edge p-5 space-y-4">
+                      <div>
+                        <div className="eyebrow">Dictionary meaning</div>
+                        <p className="mt-1 font-serif text-[17px] leading-relaxed">{activeChipVocabItem.correctDef}</p>
                       </div>
-                      <p className="font-serif text-xs text-[#1A1A1E] leading-relaxed">
-                        {activeChipVocabItem.correctDef}
-                      </p>
-
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#8A8D96] pt-1">
-                        Common Usage / Collocations
+                      <div>
+                        <div className="eyebrow">Goes with</div>
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {activeChipVocabItem.collocations?.map((c, i) => (
+                            <span key={i} className="chip bg-sheet font-serif text-[14px]">
+                              {c}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-1">
-                        {activeChipVocabItem.collocations?.map((c, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-0.5 bg-[#FAF8F5] text-[#2C313C] rounded text-[11px] font-mono border border-[#E5DFD4]"
-                          >
-                            {c}
-                          </span>
-                        ))}
+                      <div>
+                        <div className="eyebrow">Example</div>
+                        <p className="mt-1 font-serif italic text-[16px] text-ink-2">&ldquo;{activeChipVocabItem.example}&rdquo;</p>
                       </div>
-
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#8A8D96] pt-1">
-                        Exemplary Usage
-                      </div>
-                      <p className="font-serif italic text-xs text-[#52555F]">
-                        "{activeChipVocabItem.example}"
-                      </p>
                     </div>
-
-                    <div className="p-2.5 rounded-lg bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46] text-xs flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 shrink-0" />
-                      <span>Saved to your persistent Vocabulary Library.</span>
-                    </div>
+                    <p className="flex items-center gap-2 text-[14px] text-good">
+                      <CheckCircle size={17} weight="fill" />
+                      <span>Saved to your vocabulary</span>
+                    </p>
                   </div>
                 )}
               </div>
 
-              {/* Footer */}
-              <div className="px-6 py-3 border-t border-[#E8E2D8] bg-[#F5F2EB] flex justify-end">
-                <button
-                  onClick={() => setSelectedWordChip(null)}
-                  className="px-4 py-2 bg-white border border-[#DDD6C9] hover:bg-[#F2ECE1] text-[#1A1A1E] text-xs font-semibold rounded-xl cursor-pointer"
-                >
-                  Return to Rewrite
+              <div className="px-6 pb-6 flex justify-end">
+                <button onClick={() => setSelectedWordChip(null)} className="btn btn-quiet">
+                  Back to the rewrite
                 </button>
               </div>
             </div>
-          </div>
+          </Dialog>
         )}
       </div>
     </AppLayout>
